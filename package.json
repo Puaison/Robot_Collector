@@ -4,6 +4,7 @@
     "urdf-loader": "^0.13.1"
   },
   "devDependencies": {
+    "lil-gui": "^0.21.0",
     "vite": "^8.2.2"
   }
 }

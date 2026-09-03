@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { LoadingManager } from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import URDFLoader from 'urdf-loader';
+import GUI from 'lil-gui';
 
 
 // SCENE
@@ -12,7 +14,7 @@ scene.background = new THREE.Color(0x112200);
 // LIGHTS
 
 
-const light = new THREE.DirectionalLight(0xffffff,2);
+const light = new THREE.DirectionalLight(0xffffff,2); //2 is the intensity of the light
 light.position.set(1, 1, 1);
 scene.add(light);
 
@@ -31,11 +33,22 @@ camera.lookAt(0, 0, 0);
 
 
 
+// GUI
+const gui= new GUI();
+gui.add(camera, 'fov', 1, 180).onChange(animate);
+
+
+
 // RENDERER
 
 const renderer = new THREE.WebGLRenderer(); //it will also create a canvas
 renderer.setSize(window.innerWidth, window.innerHeight); // define the size of the canvas
 document.body.appendChild(renderer.domElement); // add the canvas to the DOM
+
+// Controls of the camera
+const cameracontrols = new OrbitControls(camera, renderer.domElement);
+cameracontrols.minDistance = 0.1;
+cameracontrols.maxDistance = 10;
 
 // LOADING UR5
 
@@ -78,6 +91,7 @@ function animate(time) {
   renderer.setSize(window.innerWidth, window.innerHeight);
   camera.aspect = window.innerWidth/window.innerHeight;
   camera.updateProjectionMatrix();
+  cameracontrols.update();
   renderer.render(scene, camera);
 }
 renderer.setAnimationLoop(animate);
