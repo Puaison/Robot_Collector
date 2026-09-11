@@ -33,6 +33,9 @@ const DH_ALPHA = [
     0.0
 ];
 
+let ur5robot = null;
+let ur5gripper = null;
+
 
 // SCENE
 
@@ -131,20 +134,22 @@ for (let i = 0; i < rows; i++) {
 const manager = new LoadingManager();
 const loader = new URDFLoader(manager);
 loader.packages = {
-    ur_description: '/ur5/'
+    ur_description: '/ur5/',
+    robotiq_85_description: '/ur5/'
 };
 
 loader.load(
     '/ur5/ur5.urdf',
     robot => {
+        ur5robot = robot;
         scene.add(robot);
         //console.log(robot.joints);
-        robot.setJointValue('shoulder_pan_joint', Math.PI/2); //this rotate the base
-        robot.setJointValue('shoulder_lift_joint', Math.PI/2); // this make the robot up
-        robot.setJointValue('elbow_joint', Math.PI/2 + 1); // the "gomito"
+        robot.setJointValue('shoulder_pan_joint', -Math.PI/2); //this rotate the base
+        robot.setJointValue('shoulder_lift_joint', -Math.PI/2); // this make the robot up
+        robot.setJointValue('elbow_joint', 2); // the "gomito"
         robot.setJointValue('wrist_1_joint', Math.PI/2); 
-        robot.setJointValue('wrist_2_joint', Math.PI/2 + 2.3);
-        robot.setJointValue('wrist_3_joint', Math.PI/2 + 2.3); //rotation only of the tooltip
+        robot.setJointValue('wrist_2_joint', 1);
+        robot.setJointValue('wrist_3_joint', 0); //rotation only of the tooltip
         console.log('UR5 loaded!', robot);
 
         // Rotatation of the mesh in order to stand on the floor
@@ -152,37 +157,71 @@ loader.load(
         // Robot in the center of the scene
         robot.position.set(0, 0 , 0);
         const fk = complete_forwardKinematics([
+            -Math.PI/2, 
+            -Math.PI/2, 
+            2, 
             Math.PI/2, 
-            Math.PI/2, 
-            Math.PI/2 + 1, 
-            Math.PI/2, 
-            Math.PI/2 + 2.3, 
-            Math.PI/2 + 2.3
+            1, 
+            0
         ]);
         console.log('Forward Kinematics Result:', fk.position);
         console.log('Quaternion calculation Result:', fk.orientation);
 
 
-        // Use the Three.js methods to get the position and quaternion of the last joint
-
         const lastJoint = robot.joints["wrist_3_joint"];
         const lastJoint_position = new THREE.Vector3();
         lastJoint.getWorldPosition(lastJoint_position);
-        console.log("Real Position:", lastJoint_position.x, lastJoint_position.y, lastJoint_position.z);
-
-        const quaternion = new THREE.Quaternion();
-        lastJoint.getWorldQuaternion(quaternion);
-        const R_real = new THREE.Matrix4().makeRotationFromQuaternion(quaternion);
+        console.log("Real Position of the joint:", lastJoint_position.x, lastJoint_position.y, lastJoint_position.z);
+        const quaternion_joint = new THREE.Quaternion();
+        lastJoint.getWorldQuaternion(quaternion_joint);
+        const R_real = new THREE.Matrix4().makeRotationFromQuaternion(quaternion_joint);
         //console.log("R_real:", R_real);
-        console.log("Real Quaternion:", quaternion.x, quaternion.y, quaternion.z, quaternion.w);
+        console.log("Real Quaternion Joint:", quaternion_joint.x, quaternion_joint.y, quaternion_joint.z, quaternion_joint.w);
 
+        loader.load(
+            '/ur5/robotiq_85_gripper_simple.urdf',
+            gripper => {
+                ur5gripper = gripper;
+
+
+                //gripper.setJointValue('robotiq_85_left_knuckle_joint', 0.7); // the first
+                //gripper.setJointValue('robotiq_85_right_knuckle_joint', 0.5);
+                //gripper.setJointValue('robotiq_85_left_finger_joint', 10); // it does not work
+                //gripper.setJointValue('robotiq_85_left_inner_knuckle_joint', 0.7); // it works strange but not specular
+                //gripper.setJointValue('robotiq_85_left_finger_tip_joint', 0.7); // it works strange but not specular
+
+                // Mesh setup for the gripper
+                gripper.position.set(0, 0.0, 0.137);
+                gripper.rotation.y = -Math.PI/2;
+
+                robot.joints["wrist_3_joint"].add(gripper);
+                const center = gripper.links["dummy_center_indicator_link"];
+
+                const center_position = new THREE.Vector3();
+
+                center.getWorldPosition(center_position);
+                console.log("Real Position of the gripper:", center_position.x, center_position.y, center_position.z);
+
+                const quaternion_gripper = new THREE.Quaternion();
+                center.getWorldQuaternion(quaternion_gripper);
+                const R_real_gripper = new THREE.Matrix4().makeRotationFromQuaternion(quaternion_gripper);
+                //console.log("R_real_gripper:", R_real_gripper);
+                console.log("Real Quaternion Gripper:", quaternion_gripper.x, quaternion_gripper.y, quaternion_gripper.z, quaternion_gripper.w);
+            },
+            undefined,
+            error => {
+                console.error('Error in the loading of the gripper', error);
+            }
+        );
 
     },
     undefined,
     error => {
-        console.error('Error in the loading', error);
+        console.error('Error in the loading of the robot', error);
     }
 );
+
+
 
 scene.add(floor);
 
@@ -256,23 +295,27 @@ function complete_forwardKinematics(q) {
         q[5]
     );
 
+    //Rotation of the frame of the gripper to attach it to the robot
+    const T6G = new THREE.Matrix4().makeRotationY(-Math.PI/2);
+    T6G.setPosition(0,0,0.137);
 
-    // Obtain the Final DH Canonical Transformation Matrix for last joint
+    // Obtain the Final DH Canonical Transformation Matrix for the gripper
 
-    const T06 = new THREE.Matrix4()
+    const T0G = new THREE.Matrix4()
         .multiply(T01)
         .multiply(T12)
         .multiply(T23)
         .multiply(T34)
         .multiply(T45)
-        .multiply(T56);
+        .multiply(T56)
+        .multiply(T6G);
 
 
     // Extract last joint position based on the original DH conventions
 
-    const x_original = T06.elements[12];
-    const y_original = T06.elements[13];
-    const z_original = T06.elements[14];
+    const x_original = T0G.elements[12];
+    const y_original = T0G.elements[13];
+    const z_original = T0G.elements[14];
 
     // Adjusting the position to match the uploaded URDF model's conventions and the three.js rotation around x-axis
     const x = -x_original;
@@ -288,20 +331,15 @@ function complete_forwardKinematics(q) {
 
     // Final correction matrix to be applied to the DH final matrix
     const R_correction = new THREE.Matrix4().multiply(R_x).multiply(R_z);
-    // const R_correction = new THREE.Matrix4().set(
-    //     -1, 0, 0, 0,
-    //      0, 0, 1, 0,
-    //      0, 1, 0, 0,
-    //      0, 0, 0, 1
-    // );
 
-    const R_DH = new THREE.Matrix4().extractRotation(T06);
+    const R_DH = new THREE.Matrix4().extractRotation(T0G);
 
     const R_corrected = new THREE.Matrix4()
         .multiply(R_correction)
-        .multiply(R_DH)
+        .multiply(R_DH);
+        //.multiply(R_y);
     
-    //console.log("R_corrected:", R_corrected);
+    console.log("R_corrected:", R_corrected);
     //console.log("R_DH:", R_DH);
 
     
