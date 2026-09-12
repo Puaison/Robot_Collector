@@ -129,6 +129,14 @@ for (let i = 0; i < rows; i++) {
     }
 }
 
+// BLOCK FOR THE ROBOT
+const block_Height = 0.4;
+const geometry_block = new THREE.BoxGeometry(0.15, block_Height, 0.15);
+const material_block = new THREE.MeshStandardMaterial({ color: 0xC5AA4A });
+const block = new THREE.Mesh(geometry_block, material_block);
+block.position.set(0, block_Height/2, 0);
+scene.add(block);
+
 // LOADING UR5
 
 
@@ -164,10 +172,14 @@ loader.load(
         ur5robot = robot;
         scene.add(robot);
         // Inverse Kinematics
-        const desidered_pose = [0.5,0.5,0.5,0,0,-Math.PI/4];
         //const desired_T = extract_T_from_oriented_point (desidered_pose[0],desidered_pose[1],desidered_pose[2],desidered_pose[3],desidered_pose[4],desidered_pose[5]);
-        const final_q =inverse_Kinematics(desidered_pose,robot_joints_values,100);
 
+        //RPY
+        const desidered_pose = [-0.5,0.1,-0.5,0,0,-Math.PI/2];
+        //const final_q =inverse_Kinematics(desidered_pose,robot_joints_values,10000,0.06,1e-2,0.1);
+        const temp_q =inverse_Kinematics(desidered_pose,robot_joints_values,10000,1e-4,1e-2);
+        console.log ("INVERSE KINEMATICS RESULT",temp_q);
+        const final_q = temp_q.map(angle => normalize_Angle(angle));
 
         if (prova_inverse_kin) {
             robot.setJointValue('shoulder_pan_joint', final_q[0]); //this rotate the base
@@ -189,14 +201,8 @@ loader.load(
 
         // Rotatation of the mesh in order to stand on the floor
         robot.rotation.x = -Math.PI/2;
-        // Robot in the center of the scene
-        robot.position.set(0, 0 , 0);
-
-
-        // DEBUG
-        const prova = new THREE.Vector3();
-        robot.links["wrist_3_link"].getWorldPosition(prova);
-        console.log("DEBUG", prova);
+        // Robot in the center of the scene above the box
+        robot.position.set(0, 0.4 , 0);
 
 
         loader.load(
@@ -289,6 +295,9 @@ function DHMatrix(a, d, alpha, q_i) {
 
 function extract_T_from_q(q) {
 
+    // Place the robot above the box
+    const T_y = new THREE.Matrix4().makeTranslation(0, block_Height, 0);
+
     // The URDF follows REP-103 conventions. Thus, we need to apply a rotation correction to the last joint orientation obtained by forward kinematics based on the original DH conventions
     const T_z = new THREE.Matrix4().makeRotationZ(Math.PI);
 
@@ -345,6 +354,7 @@ function extract_T_from_q(q) {
     // Obtain the Final DH Canonical Transformation Matrix for the gripper
 
     const T0G = new THREE.Matrix4()
+        .multiply(T_y)
         .multiply(T_x)
         .multiply(T_z)
         .multiply(T01)
@@ -555,7 +565,7 @@ function dumped_Least_Square(q,error_vector, lambda =0.05){
 
 }
 
-function inverse_Kinematics(target_pose,initial_q, max_Iterations =100,tolerance=1e-4){
+function inverse_Kinematics(target_pose,initial_q, max_Iterations =100,position_tolerance=1e-4,orientation_tolerance=1e-4, lambda = 0.05){
     //const target_pose = extract_pose_from_T(target_T);
     let actual_q= [...initial_q];
     //let actual_q= initial_q;
@@ -568,20 +578,20 @@ function inverse_Kinematics(target_pose,initial_q, max_Iterations =100,tolerance
 
         const orientation_error = Math.sqrt(pose_error[3] ** 2 + pose_error[4] ** 2 + pose_error[5] ** 2);
 
-        if (position_error < tolerance && orientation_error < tolerance) {
+        if (position_error < position_tolerance && orientation_error < orientation_tolerance) {
             console.log("Inverse Kinematics converged in",it,"iterations");
 
             return actual_q;
         }
 
-        const dq = dumped_Least_Square(actual_q,pose_error);
+        const dq = dumped_Least_Square(actual_q,pose_error,lambda);
         for (let i = 0; i < 6; i++) {
             actual_q[i] += dq[i];
         }
     }
     console.warn("Inverse Kinematics did not converge");
 
-    return initial_q;
+    return actual_q;
 }
 
 function complete_forwardKinematics(q) {
