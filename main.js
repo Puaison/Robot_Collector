@@ -4,6 +4,10 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import URDFLoader from 'urdf-loader';
 import GUI from 'lil-gui';
 import { Matrix,inverse } from 'ml-matrix';
+import * as TWEEN from '@tweenjs/tween.js';
+
+// Tween setup
+const My_TWEEN = new TWEEN.Group();
 
 // DH parameters for UR5
 
@@ -128,6 +132,7 @@ for (let i = 0; i < rows; i++) {
         floor.add(tile);
     }
 }
+scene.add(floor);
 
 // BLOCK FOR THE ROBOT
 const block_Height = 0.4;
@@ -147,7 +152,7 @@ loader.packages = {
     robotiq_85_description: '/ur5/'
 };
 
-const robot_joints_values=[
+const robot_initial_joints_values=[
      -Math.PI/2, 
      -Math.PI/2, 
      0, 
@@ -156,55 +161,76 @@ const robot_joints_values=[
      0
  ];
 
-// const robot_joints_values=[
-//     0, 
-//     0, 
-//     0, 
-//     0, 
-//     0, 
-//     0
-// ];
 const prova_inverse_kin = true;
 
-loader.load(
-    '/ur5/ur5.urdf',
-    robot => {
-        ur5robot = robot;
-        scene.add(robot);
-        // Inverse Kinematics
-        //const desired_T = extract_T_from_oriented_point (desidered_pose[0],desidered_pose[1],desidered_pose[2],desidered_pose[3],desidered_pose[4],desidered_pose[5]);
+// calculate rest pose
+const rest_pose = [0.1,1.52,0.1,0,0,Math.PI/2];
+const temp_rest_q =inverse_Kinematics(rest_pose,robot_initial_joints_values,10000,1e-4,1e-2);
+const rest_q = temp_rest_q.map(angle => normalize_Angle(angle));
 
-        //RPY
-        const desidered_pose = [-0.5,0.1,-0.5,0,0,-Math.PI/2];
-        //const final_q =inverse_Kinematics(desidered_pose,robot_joints_values,10000,0.06,1e-2,0.1);
-        const temp_q =inverse_Kinematics(desidered_pose,robot_joints_values,10000,1e-4,1e-2);
-        console.log ("INVERSE KINEMATICS RESULT",temp_q);
-        const final_q = temp_q.map(angle => normalize_Angle(angle));
+function update_Threejs_Robot_Joints(q,robot_ur5) {
+    robot_ur5.setJointValue('shoulder_pan_joint', q[0]); //this rotate the base
+    robot_ur5.setJointValue('shoulder_lift_joint', q[1]); // this make the robot up
+    robot_ur5.setJointValue('elbow_joint', q[2]); // the "gomito"
+    robot_ur5.setJointValue('wrist_1_joint', q[3]); 
+    robot_ur5.setJointValue('wrist_2_joint', q[4]);
+    robot_ur5.setJointValue('wrist_3_joint', q[5]); //rotation only of the tooltip
+}
 
-        if (prova_inverse_kin) {
-            robot.setJointValue('shoulder_pan_joint', final_q[0]); //this rotate the base
-            robot.setJointValue('shoulder_lift_joint', final_q[1]); // this make the robot up
-            robot.setJointValue('elbow_joint', final_q[2]); // the "gomito"
-            robot.setJointValue('wrist_1_joint', final_q[3]); 
-            robot.setJointValue('wrist_2_joint', final_q[4]);
-            robot.setJointValue('wrist_3_joint', final_q[5]); //rotation only of the tooltip
-            console.log('UR5 loaded in IK!', robot);
-        } else {
-            robot.setJointValue('shoulder_pan_joint', robot_joints_values[0]); //this rotate the base
-            robot.setJointValue('shoulder_lift_joint', robot_joints_values[1]); // this make the robot up
-            robot.setJointValue('elbow_joint', robot_joints_values[2]); // the "gomito"
-            robot.setJointValue('wrist_1_joint', robot_joints_values[3]); 
-            robot.setJointValue('wrist_2_joint', robot_joints_values[4]);
-            robot.setJointValue('wrist_3_joint', robot_joints_values[5]); //rotation only of the tooltip
-            console.log('UR5 loaded normally!', robot);
-        }
+function move_Threejs_Robot(q_initial, q_final, robot_ur5, duration = 3000) {
+    return new Promise((resolve) => {
+        const q = Array.from(q_initial);
+        const target = Array.from(q_final);
+        new TWEEN.Tween(q, My_TWEEN) //Start from q
+            .to(target, duration) //It must reach target in these milliseconds
+            .easing(TWEEN.Easing.Sinusoidal.InOut) //More sweet animation at the start and at the end
+            .onUpdate(() => { // Function called during the animation
+                const temp_q = [
+                    q[0],
+                    q[1],
+                    q[2],
+                    q[3],
+                    q[4],
+                    q[5]
+                ];
+                const current_q = temp_q.map(angle => normalize_Angle(angle));
+                update_Threejs_Robot_Joints(current_q, robot_ur5);
+            })
+            .onComplete(() => {resolve();}) //Function called at the end of the animation
+            .start(); //Let start the planned Tween
+    });
+}
 
-        // Rotatation of the mesh in order to stand on the floor
-        robot.rotation.x = -Math.PI/2;
-        // Robot in the center of the scene above the box
-        robot.position.set(0, 0.4 , 0);
+function load_Robot() {
+    return new Promise((resolve, reject) => {
+        loader.load(
+            '/ur5/ur5.urdf',
+            robot => {
+                ur5robot = robot;
+                scene.add(robot);
 
+                if (prova_inverse_kin) {
+                    update_Threejs_Robot_Joints(rest_q,robot);
+                    console.log('UR5 loaded in IK!', robot);
+                } else {
+                    update_Threejs_Robot_Joints(robot_initial_joints_values,robot);
+                    console.log('UR5 loaded normally!', robot);
+                }
 
+                // Rotatation of the mesh in order to stand on the floor
+                robot.rotation.x = -Math.PI/2;
+                // Robot in the center of the scene above the box
+                robot.position.set(0, 0.4 , 0);
+                resolve();
+            },
+            undefined,
+            reject
+        );
+    });
+}
+
+function load_Gripper() {
+    return new Promise((resolve, reject) => {
         loader.load(
             '/ur5/robotiq_85_gripper_simple.urdf',
             gripper => {
@@ -221,52 +247,51 @@ loader.load(
                 gripper.position.set(0, 0.0, 0.137);
                 gripper.rotation.y = -Math.PI/2;
 
-                robot.joints["wrist_3_joint"].add(gripper);
-                const center = gripper.links["dummy_center_indicator_link"];
-
-                let T_gripper = null;
-                if(prova_inverse_kin) {
-                    T_gripper = extract_T_from_q(final_q);
-                    console.log("Entered 1");
-                } else {
-                    T_gripper = extract_T_from_q(robot_joints_values);
-                    console.log("Entered 2");
-                }
-                const TCP_position = extract_position_from_T(T_gripper);
-                const TCP_RPY = extract_RPY_from_T(T_gripper);
-
-
-                const center_position = new THREE.Vector3();
-                center.getWorldPosition(center_position);
-                console.log("Real Position of the gripper:", center_position.x, center_position.y, center_position.z);
-                console.log('Forward Kinematics Result of the gripper:', TCP_position);
-
-                const quaternion_gripper = new THREE.Quaternion();
-                center.getWorldQuaternion(quaternion_gripper);
-                const RPY = new THREE.Euler();
-                RPY.setFromQuaternion(quaternion_gripper, 'ZYX');
-                console.log("Real Roll-pitch-yaw Gripper:", RPY.x, RPY.y, RPY.z);
-                console.log('Roll-pitch-yaw calculation Result of the gripper:', TCP_RPY);
-
-                // console.log("Computed T", T_gripper);
-                // console.log("Real T", extract_T_from_oriented_point(center_position.x, center_position.y, center_position.z, RPY.x, RPY.y, RPY.z));
+                ur5robot.joints["wrist_3_joint"].add(gripper);
+                resolve();
             },
             undefined,
-            error => {
-                console.error('Error in the loading of the gripper', error);
-            }
+            reject
         );
+    });
+}
 
-    },
-    undefined,
-    error => {
-        console.error('Error in the loading of the robot', error);
+async function init() {
+    await load_Robot();
+    await load_Gripper();
+    const desired_pose = [-0.5,0.1,0.5,-Math.PI/2,0,-Math.PI/2];
+    const temp_q =inverse_Kinematics(desired_pose,rest_q,10000,1e-4,1e-2);
+    const final_q = temp_q.map(angle => normalize_Angle(angle));
+    //await move_Threejs_Robot(robot_initial_joints_values, rest_q,ur5robot, 5000);
+    await move_Threejs_Robot(rest_q,final_q,ur5robot,5000);
+
+    // PLOT
+    const center = ur5gripper.links["dummy_center_indicator_link"];
+
+    let T_gripper = null;
+    if(prova_inverse_kin) {
+        T_gripper = extract_T_from_q(final_q);
+    } else {
+        T_gripper = extract_T_from_q(robot_initial_joints_values);
     }
-);
+    const TCP_position = extract_position_from_T(T_gripper);
+    const TCP_RPY = extract_RPY_from_T(T_gripper);
 
 
+    const center_position = new THREE.Vector3();
+    center.getWorldPosition(center_position);
+    console.log("Real Position of the gripper:", center_position.x, center_position.y, center_position.z);
+    console.log('Forward Kinematics Result of the gripper:', TCP_position);
 
-scene.add(floor);
+
+    const quaternion_gripper = new THREE.Quaternion();
+    center.getWorldQuaternion(quaternion_gripper);
+    const RPY = new THREE.Euler();
+    RPY.setFromQuaternion(quaternion_gripper, 'ZYX');
+    console.log("Real Roll-pitch-yaw Gripper:", RPY.x, RPY.y, RPY.z);
+    console.log('Roll-pitch-yaw calculation Result of the gripper:', TCP_RPY);
+}
+
 
 
 
@@ -275,6 +300,7 @@ function animate(time) {
   camera.aspect = window.innerWidth/window.innerHeight;
   camera.updateProjectionMatrix();
   cameracontrols.update();
+  My_TWEEN.update(time);
   renderer.render(scene, camera);
 }
 renderer.setAnimationLoop(animate);
@@ -594,113 +620,4 @@ function inverse_Kinematics(target_pose,initial_q, max_Iterations =100,position_
     return actual_q;
 }
 
-function complete_forwardKinematics(q) {
-
-    // Create the six DH matrices for each joint
-    const T01 = DHMatrix(
-        DH_A[0],
-        DH_D[0],
-        DH_ALPHA[0],
-        q[0]
-    );
-
-    const T12 = DHMatrix(
-        DH_A[1],
-        DH_D[1],
-        DH_ALPHA[1],
-        q[1]
-    );
-
-    const T23 = DHMatrix(
-        DH_A[2],
-        DH_D[2],
-        DH_ALPHA[2],
-        q[2]
-    );
-
-    const T34 = DHMatrix(
-        DH_A[3],
-        DH_D[3],
-        DH_ALPHA[3],
-        q[3]
-    );
-
-    const T45 = DHMatrix(
-        DH_A[4],
-        DH_D[4],
-        DH_ALPHA[4],
-        q[4]
-    );
-
-    const T56 = DHMatrix(
-        DH_A[5],
-        DH_D[5],
-        DH_ALPHA[5],
-        q[5]
-    );
-
-    //Rotation of the frame of the gripper to attach it to the robot
-    const T6G = new THREE.Matrix4().makeRotationY(-Math.PI/2);
-    T6G.setPosition(0,0,0.137);
-
-    // Obtain the Final DH Canonical Transformation Matrix for the gripper
-
-    const T0G = new THREE.Matrix4()
-        .multiply(T01)
-        .multiply(T12)
-        .multiply(T23)
-        .multiply(T34)
-        .multiply(T45)
-        .multiply(T56)
-        .multiply(T6G);
-
-
-    // Extract last joint position based on the original DH conventions
-
-    const x_original = T0G.elements[12];
-    const y_original = T0G.elements[13];
-    const z_original = T0G.elements[14];
-
-    // Adjusting the position to match the uploaded URDF model's conventions and the three.js rotation around x-axis
-    const x = -x_original;
-    const y = z_original;
-    const z = y_original;
-
-
-    // The URDF follows REP-103 conventions. Thus, we need to apply a rotation correction to the last joint orientation obtained by forward kinematics based on the original DH conventions
-    const R_z = new THREE.Matrix4().makeRotationZ(Math.PI);
-
-    // Three.js mesh rotation around x-axis in order to have the robot standing on the floor
-    const R_x = new THREE.Matrix4().makeRotationX(-Math.PI/2);
-
-    // Final correction matrix to be applied to the DH final matrix
-    const R_correction = new THREE.Matrix4().multiply(R_x).multiply(R_z);
-
-    const R_DH = new THREE.Matrix4().extractRotation(T0G);
-
-    const R_corrected = new THREE.Matrix4()
-        .multiply(R_correction)
-        .multiply(R_DH);
-        //.multiply(R_y);
-    
-    console.log("R_corrected:", R_corrected);
-    //console.log("R_DH:", R_DH);
-
-    
-    const orientation = new THREE.Quaternion();
-    orientation.setFromRotationMatrix(R_corrected);
-
-
-    // Roll, Pitch, Yaw
-    const e = new THREE.Euler();
-
-    e.setFromRotationMatrix(R_corrected, 'ZYX');
-
-    const roll  = e.x;
-    const pitch = e.y;
-    const yaw   = e.z;
-    console.log("Roll_Gripper_calculated:", roll, "Pitch_Gripper_calculated:", pitch, "Yaw_Gripper_calculated:", yaw);
-
-
-    return {position: {x, y, z}, orientation: orientation};
-}
+init();

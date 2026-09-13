@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@tweenjs/tween.js": "^25.0.0",
     "ml-matrix": "^6.15.0",
     "three": "^0.185.1",
     "urdf-loader": "^0.13.1"
