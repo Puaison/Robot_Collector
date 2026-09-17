@@ -24,3 +24,12 @@ These objects define a hierarchical parent/child tree like structure and represe
 2) si crea la camera (fov in gradi, aspect, near, far). L'asse -z è quello che entra nello schermo. Quindi se faccio z=2, allora mi sto allontanando 
 3) si crea la scena
 4)
+
+Installation of for ammo.js is the same for cannon.js
+
+Però riprende la stessa API di Bullet
+Bullet è il motore fisico. Emscripten è lo strumento che lo porta nel mondo Web. Ammo.js è l'interfaccia/build che ti permette di usare Bullet dal JavaScript.
+
+Quindi il webassembly è codice C++ compilato (in realtà può essere anche Rust compilato), però invece di avere il binario hai un linguaggio che può essere eseguito dal browser. Ed è il caso di ammo.wasm.wasm.
+Poi serve appunto qualcosa per comunicare con questo wasm, altrimenti io come faccio a chiamarlo?
+ammo.js invece è semplicemente l'altra build di Ammo, quella in cui il codice di Bullet è stato compilato in JavaScript invece che in WebAssembly.
