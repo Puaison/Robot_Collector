@@ -34,7 +34,7 @@ const My_TWEEN = new TWEEN.Group();
 
 // SCENE
 
-const scene = new THREE.Scene();
+export const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xC5A643);
 
 // LIGHTS
@@ -201,9 +201,20 @@ export function load_Gripper() {
             '/ur5/robotiq_85_gripper_simple.urdf',
             gripper => {
                 ur5gripper = gripper;
+                const finger_sensor_geometry = new THREE.BoxGeometry(0.038, 0.0156, 0.022);
+                const finger_sensor_material = new THREE.MeshBasicMaterial({ color: 0xff0000, visible: false });
+            
+                const finger_sensor_left = new THREE.Mesh(finger_sensor_geometry, finger_sensor_material);
+                finger_sensor_left.position.set(0.025,0.0,0.0); //0.032
+            
+                const finger_sensor_right = new THREE.Mesh(finger_sensor_geometry, finger_sensor_material);
+                finger_sensor_right.position.set(0.025,0.0,0.0);
+            
+                ur5gripper.links["robotiq_85_left_finger_tip_link"].add(finger_sensor_left);
+                ur5gripper.links["robotiq_85_right_finger_tip_link"].add(finger_sensor_right);
 
 
-                //gripper.setJointValue('robotiq_85_left_knuckle_joint', 0.7); // the first
+                //ur5gripper.setJointValue('robotiq_85_left_knuckle_joint', 0.5); // the first
                 //gripper.setJointValue('robotiq_85_right_knuckle_joint', 0.5);
                 //gripper.setJointValue('robotiq_85_left_finger_joint', 10); // it does not work
                 //gripper.setJointValue('robotiq_85_left_inner_knuckle_joint', 0.7); // it works strange but not specular
@@ -266,6 +277,20 @@ export function move_Threejs_Robot(q_initial, q_final, robot_ur5, duration = 300
                 ];
                 const current_q = temp_q.map(angle => normalize_Angle(angle));
                 update_Threejs_Robot_Joints(current_q, robot_ur5);
+            })
+            .onComplete(() => {resolve();}) //Function called at the end of the animation
+            .start(); //Let start the planned Tween
+    });
+}
+
+export function open_close_Threejs_Gripper(initial_value, final_value, robotiq_85_gripper, duration = 3000) {
+    return new Promise((resolve) => {
+        const current_value = [initial_value];
+        new TWEEN.Tween(current_value, My_TWEEN) //Start from q
+            .to([final_value], duration) //It must reach target in these milliseconds
+            .easing(TWEEN.Easing.Sinusoidal.InOut) //More sweet animation at the start and at the end
+            .onUpdate(() => { // Function called during the animation
+                robotiq_85_gripper.setJointValue('robotiq_85_left_knuckle_joint', current_value[0]);
             })
             .onComplete(() => {resolve();}) //Function called at the end of the animation
             .start(); //Let start the planned Tween
