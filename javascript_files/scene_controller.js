@@ -28,6 +28,10 @@ world_with_Physics.setGravity(new My_Ammo.btVector3(0, -9.0, 0));
 
 export let ur5robot = null;
 export let ur5gripper = null;
+export let ur5finger_sensor_left_mesh = null;
+export let ur5finger_sensor_right_mesh=null;
+export let ur5finger_sensor_left_Ammo = null;
+export let ur5finger_sensor_right_Ammo=null;
 
 // Tween setup
 const My_TWEEN = new TWEEN.Group();
@@ -204,15 +208,23 @@ export function load_Gripper() {
                 const finger_sensor_geometry = new THREE.BoxGeometry(0.038, 0.0156, 0.022);
                 const finger_sensor_material = new THREE.MeshBasicMaterial({ color: 0xff0000, visible: false });
             
-                const finger_sensor_left = new THREE.Mesh(finger_sensor_geometry, finger_sensor_material);
-                finger_sensor_left.position.set(0.025,0.0,0.0); //0.032
+                const finger_sensor_left_mesh= new THREE.Mesh(finger_sensor_geometry, finger_sensor_material);
+                finger_sensor_left_mesh.position.set(0.025,0.0,0.0); //0.032
             
-                const finger_sensor_right = new THREE.Mesh(finger_sensor_geometry, finger_sensor_material);
-                finger_sensor_right.position.set(0.025,0.0,0.0);
+                const finger_sensor_right_mesh = new THREE.Mesh(finger_sensor_geometry, finger_sensor_material);
+                finger_sensor_right_mesh.position.set(0.025,0.0,0.0);
             
-                ur5gripper.links["robotiq_85_left_finger_tip_link"].add(finger_sensor_left);
-                ur5gripper.links["robotiq_85_right_finger_tip_link"].add(finger_sensor_right);
+                ur5gripper.links["robotiq_85_left_finger_tip_link"].add(finger_sensor_left_mesh);
+                ur5gripper.links["robotiq_85_right_finger_tip_link"].add(finger_sensor_right_mesh);
 
+                ur5finger_sensor_left_mesh=finger_sensor_left_mesh;
+                ur5finger_sensor_right_mesh=finger_sensor_right_mesh;
+
+                //Ammo syncronization for the two sensors
+                ur5finger_sensor_left_Ammo = create_physical_finger_sensor(ur5finger_sensor_left_mesh);
+                ur5finger_sensor_right_Ammo = create_physical_finger_sensor(ur5finger_sensor_right_mesh);
+                world_with_Physics.addRigidBody(ur5finger_sensor_left_Ammo);
+                world_with_Physics.addRigidBody(ur5finger_sensor_right_Ammo);
 
                 //ur5gripper.setJointValue('robotiq_85_left_knuckle_joint', 0.5); // the first
                 //gripper.setJointValue('robotiq_85_right_knuckle_joint', 0.5);
@@ -242,9 +254,13 @@ export function animate(time) {
     camera.updateProjectionMatrix();
     cameracontrols.update();
     My_TWEEN.update(time);
+
+    if (ur5finger_sensor_left_Ammo && ur5finger_sensor_right_Ammo) { //skip this if the finger sensors are not already created
+        sync_threejs_ammo(ur5finger_sensor_left_mesh, ur5finger_sensor_left_Ammo);
+        sync_threejs_ammo(ur5finger_sensor_right_mesh, ur5finger_sensor_right_Ammo);
+    }
     timer.update();
     const elapsed_Time = timer.getDelta();
-
     // How to step the physical simulation
     world_with_Physics.stepSimulation(elapsed_Time,10);
     renderer.render(scene, camera);
@@ -259,7 +275,7 @@ export function update_Threejs_Robot_Joints(q,robot_ur5) {
     robot_ur5.setJointValue('wrist_3_joint', q[5]); //rotation only of the tooltip
 }
 
-export function move_Threejs_Robot(q_initial, q_final, robot_ur5, duration = 3000) {
+export function move_Threejs_Robot(q_initial, q_final, robot_ur5, duration = 5000) {
     return new Promise((resolve) => {
         const q = Array.from(q_initial);
         const target = Array.from(q_final);
@@ -283,7 +299,7 @@ export function move_Threejs_Robot(q_initial, q_final, robot_ur5, duration = 300
     });
 }
 
-export function open_close_Threejs_Gripper(initial_value, final_value, robotiq_85_gripper, duration = 3000) {
+export function open_close_Threejs_Gripper(initial_value, final_value, robotiq_85_gripper, duration = 5000) {
     return new Promise((resolve) => {
         const current_value = [initial_value];
         new TWEEN.Tween(current_value, My_TWEEN) //Start from q
@@ -295,4 +311,38 @@ export function open_close_Threejs_Gripper(initial_value, final_value, robotiq_8
             .onComplete(() => {resolve();}) //Function called at the end of the animation
             .start(); //Let start the planned Tween
     });
+}
+
+function create_physical_finger_sensor(finger_sensor_mesh) {
+    const sensor_shape_Ammo = new My_Ammo.btBoxShape(new My_Ammo.btVector3(0.038/2, 0.0156/2, 0.022/2));
+    const initial_transformation = new My_Ammo.btTransform();
+    initial_transformation.setIdentity();
+    const position_mesh = new THREE.Vector3();
+    const quaternion_mesh = new THREE.Quaternion();
+    finger_sensor_mesh.getWorldPosition(position_mesh);
+    finger_sensor_mesh.getWorldQuaternion(quaternion_mesh);
+    initial_transformation.setOrigin(new My_Ammo.btVector3(position_mesh.x,position_mesh.y,position_mesh.z));
+    initial_transformation.setRotation(new My_Ammo.btQuaternion(quaternion_mesh.x,quaternion_mesh.y,quaternion_mesh.z,quaternion_mesh.w));
+    const initial_state_Ammo= new My_Ammo.btDefaultMotionState(initial_transformation);
+    const info_rigid_body_Ammo = new My_Ammo.btRigidBodyConstructionInfo(
+        0, //mass
+        initial_state_Ammo,
+        sensor_shape_Ammo,
+        new My_Ammo.btVector3(0, 0, 0)
+    );
+    const physical_finger_sensor = new My_Ammo.btRigidBody(info_rigid_body_Ammo);
+    return physical_finger_sensor;
+}
+
+function sync_threejs_ammo(mesh, rigid_body){
+    const position_mesh = new THREE.Vector3();
+    const quaternion_mesh = new THREE.Quaternion();
+    mesh.getWorldPosition(position_mesh);
+    mesh.getWorldQuaternion(quaternion_mesh);
+
+    const current_transformation = new My_Ammo.btTransform();
+    current_transformation.setIdentity();
+    current_transformation.setOrigin(new My_Ammo.btVector3(position_mesh.x,position_mesh.y,position_mesh.z));
+    current_transformation.setRotation(new My_Ammo.btQuaternion(quaternion_mesh.x,quaternion_mesh.y,quaternion_mesh.z,quaternion_mesh.w));
+    rigid_body.setWorldTransform(current_transformation);
 }
