@@ -27,11 +27,18 @@ world_with_Physics.setGravity(new My_Ammo.btVector3(0, -9.0, 0));
 //#region scene setup
 
 export let ur5robot = null;
+export let ur5tcp=null;
 export let ur5gripper = null;
 export let ur5finger_sensor_left_mesh = null;
 export let ur5finger_sensor_right_mesh=null;
 export let ur5finger_sensor_left_Ammo = null;
 export let ur5finger_sensor_right_Ammo=null;
+
+export let collectable_cube_mesh = null;
+export let collectable_cube_Ammo = null;
+
+export let object_collected = false;
+export let gripper_closed_value = null;
 
 // Tween setup
 const My_TWEEN = new TWEEN.Group();
@@ -222,9 +229,15 @@ export function load_Gripper() {
 
                 //Ammo syncronization for the two sensors
                 ur5finger_sensor_left_Ammo = create_physical_finger_sensor(ur5finger_sensor_left_mesh);
+                ur5finger_sensor_left_Ammo.setUserIndex(2000);
+
                 ur5finger_sensor_right_Ammo = create_physical_finger_sensor(ur5finger_sensor_right_mesh);
+                ur5finger_sensor_right_Ammo.setUserIndex(3000);
+
                 world_with_Physics.addRigidBody(ur5finger_sensor_left_Ammo);
                 world_with_Physics.addRigidBody(ur5finger_sensor_right_Ammo);
+
+                ur5tcp=ur5gripper.links["dummy_center_indicator_link"];
 
                 //ur5gripper.setJointValue('robotiq_85_left_knuckle_joint', 0.5); // the first
                 //gripper.setJointValue('robotiq_85_right_knuckle_joint', 0.5);
@@ -256,13 +269,19 @@ export function animate(time) {
     My_TWEEN.update(time);
 
     if (ur5finger_sensor_left_Ammo && ur5finger_sensor_right_Ammo) { //skip this if the finger sensors are not already created
-        sync_threejs_ammo(ur5finger_sensor_left_mesh, ur5finger_sensor_left_Ammo);
-        sync_threejs_ammo(ur5finger_sensor_right_mesh, ur5finger_sensor_right_Ammo);
+        syncronize_finger_mesh_to_Ammo(ur5finger_sensor_left_mesh, ur5finger_sensor_left_Ammo);
+        syncronize_finger_mesh_to_Ammo(ur5finger_sensor_right_mesh, ur5finger_sensor_right_Ammo);
     }
     timer.update();
     const elapsed_Time = timer.getDelta();
     // How to step the physical simulation
     world_with_Physics.stepSimulation(elapsed_Time,10);
+    if (!object_collected){
+        syncronize_Ammo_to_mesh();
+    }
+    else {
+        syncronize_mesh_to_Ammo();
+    }
     renderer.render(scene, camera);
 }
 
@@ -302,11 +321,22 @@ export function move_Threejs_Robot(q_initial, q_final, robot_ur5, duration = 500
 export function open_close_Threejs_Gripper(initial_value, final_value, robotiq_85_gripper, duration = 5000) {
     return new Promise((resolve) => {
         const current_value = [initial_value];
-        new TWEEN.Tween(current_value, My_TWEEN) //Start from q
+        const gripper_tween = new TWEEN.Tween(current_value, My_TWEEN) //Start from current_value
             .to([final_value], duration) //It must reach target in these milliseconds
             .easing(TWEEN.Easing.Sinusoidal.InOut) //More sweet animation at the start and at the end
             .onUpdate(() => { // Function called during the animation
+                if (detect_collisions_between(1,3000) && detect_collisions_between(1,2000) && !(object_collected)){
+                    console.log("Stop grasping");
+                    gripper_tween.stop();
+                    collect_object();
+                    resolve();
+                }
+                if (!detect_collisions_between(1,3000) && !detect_collisions_between(1,2000) && object_collected){
+                    console.log("Release object");
+                    release_object();
+                }
                 robotiq_85_gripper.setJointValue('robotiq_85_left_knuckle_joint', current_value[0]);
+                gripper_closed_value = current_value[0];
             })
             .onComplete(() => {resolve();}) //Function called at the end of the animation
             .start(); //Let start the planned Tween
@@ -334,7 +364,7 @@ function create_physical_finger_sensor(finger_sensor_mesh) {
     return physical_finger_sensor;
 }
 
-function sync_threejs_ammo(mesh, rigid_body){
+function syncronize_finger_mesh_to_Ammo(mesh, rigid_body){
     const position_mesh = new THREE.Vector3();
     const quaternion_mesh = new THREE.Quaternion();
     mesh.getWorldPosition(position_mesh);
@@ -345,4 +375,135 @@ function sync_threejs_ammo(mesh, rigid_body){
     current_transformation.setOrigin(new My_Ammo.btVector3(position_mesh.x,position_mesh.y,position_mesh.z));
     current_transformation.setRotation(new My_Ammo.btQuaternion(quaternion_mesh.x,quaternion_mesh.y,quaternion_mesh.z,quaternion_mesh.w));
     rigid_body.setWorldTransform(current_transformation);
+    //Update the internal collision engine
+    const motion_state = rigid_body.getMotionState();
+
+    
+    motion_state.setWorldTransform(current_transformation);
+    world_with_Physics.updateSingleAabb(rigid_body);
+}
+
+export function create_collectable_object(position=[0.5,0.03,0.5]) {
+    // NEW BLOCK TO GRASP
+    const collectable_object_size = 0.04; //0.03
+    const collectable_object_mass =1;
+    const object_collectable_geometry = new THREE.BoxGeometry(
+        collectable_object_size,
+        collectable_object_size,
+        collectable_object_size
+    );
+
+    const collectable_object_material = new THREE.MeshStandardMaterial({color: 0xffff44});
+    const collectable_object_mesh = new THREE.Mesh(object_collectable_geometry,collectable_object_material);
+    collectable_object_mesh.position.set(position[0], position[1], position[2]);
+    scene.add(collectable_object_mesh);
+
+    const collectable_object_shape_Ammo = new My_Ammo.btBoxShape(new My_Ammo.btVector3(collectable_object_size/2, collectable_object_size/2, collectable_object_size/2));
+    const initial_transformation = new My_Ammo.btTransform();
+    initial_transformation.setIdentity();
+    initial_transformation.setOrigin(new My_Ammo.btVector3(position[0], position[1], position[2]));
+    initial_transformation.setRotation(new My_Ammo.btQuaternion(0,0,0,1));
+    const initial_state_Ammo= new My_Ammo.btDefaultMotionState(initial_transformation);
+    const collectable_object_inertia_Ammo=new My_Ammo.btVector3(0, 0, 0);
+    collectable_object_shape_Ammo.calculateLocalInertia(collectable_object_mass,collectable_object_inertia_Ammo);
+    const info_rigid_body_Ammo = new My_Ammo.btRigidBodyConstructionInfo(
+        collectable_object_mass, //mass
+        initial_state_Ammo,
+        collectable_object_shape_Ammo,
+        collectable_object_inertia_Ammo
+    );
+    const collectable_object_Ammo = new My_Ammo.btRigidBody(info_rigid_body_Ammo);
+    collectable_object_Ammo.setActivationState(4); //otherwise after sometime Ammo will deactivate it
+    world_with_Physics.addRigidBody(collectable_object_Ammo);
+
+    return [collectable_object_mesh, collectable_object_Ammo];
+}
+
+export function set_cube_mesh(mesh) {
+    collectable_cube_mesh = mesh;
+}
+
+export function set_cube_Ammo(object_Ammo) {
+    collectable_cube_Ammo = object_Ammo;
+    collectable_cube_Ammo.setUserIndex(1);
+}
+
+function syncronize_Ammo_to_mesh(){
+    if (collectable_cube_mesh && collectable_cube_Ammo){
+        const motion_state = collectable_cube_Ammo.getMotionState();
+        const Ammo_tranformation = new My_Ammo.btTransform();
+        motion_state.getWorldTransform(Ammo_tranformation);
+
+        const position = Ammo_tranformation.getOrigin();
+        const orientation = Ammo_tranformation.getRotation();
+
+        collectable_cube_mesh.position.set(position.x(),position.y(),position.z());
+        collectable_cube_mesh.quaternion.set(orientation.x(), orientation.y(), orientation.z(), orientation.w());
+
+    }
+    else {
+        return;
+    }
+}
+
+function syncronize_mesh_to_Ammo(){
+    if (collectable_cube_mesh && collectable_cube_Ammo){
+        const position = new THREE.Vector3();
+        const orientation = new THREE.Quaternion();
+        collectable_cube_mesh.getWorldPosition(position);
+        collectable_cube_mesh.getWorldQuaternion(orientation);
+
+        const Ammo_tranformation = new My_Ammo.btTransform();
+        Ammo_tranformation.setIdentity();
+
+        const Ammo_position = Ammo_tranformation.getOrigin();
+        Ammo_position.setValue(position.x,position.y,position.z);
+
+        Ammo_tranformation.setRotation(new My_Ammo.btQuaternion(orientation.x,orientation.y,orientation.z,orientation.w));
+        collectable_cube_Ammo.setWorldTransform(Ammo_tranformation);
+        const motion_state = collectable_cube_Ammo.getMotionState();
+
+        
+        motion_state.setWorldTransform(Ammo_tranformation);
+        world_with_Physics.updateSingleAabb(collectable_cube_Ammo);
+
+    }
+    else {
+        return;
+    }
+}
+
+function detect_collisions_between(Id_object_Ammo_1, Id_object_Ammo_2){
+    const dispatcher = world_with_Physics.getDispatcher();
+    const num_manifolds = dispatcher.getNumManifolds();
+    for (let i = 0; i < num_manifolds; i++) {
+        const manifold = dispatcher.getManifoldByIndexInternal(i);
+        const Ammo_body_1 = manifold.getBody0();
+        const Ammo_body_2 = manifold.getBody1();
+        const Id_body_1 = Ammo_body_1.getUserIndex();
+        const Id_body_2 = Ammo_body_2.getUserIndex();
+
+        if(!((Id_body_1 == Id_object_Ammo_1 && Id_body_2 == Id_object_Ammo_2) || (Id_body_1 == Id_object_Ammo_2 && Id_body_2 == Id_object_Ammo_1))){
+            continue;
+        }
+
+        if (manifold.getNumContacts() > 0){
+            return true;
+        }
+    }
+    return false;
+}
+
+function collect_object(){
+    object_collected = true;
+    ur5tcp.attach(collectable_cube_mesh);
+    collectable_cube_mesh.position.set(0,0,0);
+    collectable_cube_mesh.quaternion.identity();
+    collectable_cube_Ammo.setCollisionFlags(collectable_cube_Ammo.getCollisionFlags() | 2); //Necessary otherwise strange behaviour when releasing
+}
+
+function release_object(){
+    object_collected = false;
+    scene.attach(collectable_cube_mesh);
+    collectable_cube_Ammo.setCollisionFlags(collectable_cube_Ammo.getCollisionFlags() & ~2); //Necessary otherwise strange behaviour when releasing
 }
