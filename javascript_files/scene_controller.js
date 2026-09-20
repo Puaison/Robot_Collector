@@ -130,7 +130,6 @@ for (let i = 0; i < floor_rows; i++) {
 }
 scene.add(floor_Visual);
 //#endregion
-
 //#region Physical Floor description (for Ammo environment)
 
 const floor_Width = floor_coloumns * floor_tile_size;   // 2.0
@@ -168,6 +167,14 @@ const material_block = new THREE.MeshStandardMaterial({ color: 0xC5AA4A });
 const block = new THREE.Mesh(geometry_block, material_block);
 block.position.set(0, block_Height/2, 0);
 scene.add(block);
+
+//#region CHESTS
+const chest_mesh_1 = create_chest();
+chest_mesh_1.position.x =0.85;
+const chest_mesh_2 = create_chest();
+chest_mesh_2.position.x =-0.85;
+
+//#endregion
 
 // LOADING UR5
 
@@ -506,4 +513,54 @@ function release_object(){
     object_collected = false;
     scene.attach(collectable_cube_mesh);
     collectable_cube_Ammo.setCollisionFlags(collectable_cube_Ammo.getCollisionFlags() & ~2); //Necessary otherwise strange behaviour when releasing
+}
+
+function create_chest(position=[0.5,0.0,0.0]) {
+    const width_of_the_chest= 0.3; 
+    const depth_of_the_chest= 0.3;
+    const height_of_the_chest= 0.2;
+    const thickness_of_panels= 0.005;
+    const chest_mesh = new THREE.Group();
+    const paper_material = new THREE.MeshStandardMaterial({
+        color: 0xBA8940
+    });
+    
+    const bottom_panel_geometry = new THREE.BoxGeometry(width_of_the_chest,thickness_of_panels,depth_of_the_chest);
+    const bottom_panel = new THREE.Mesh(bottom_panel_geometry,paper_material);
+    bottom_panel.position.y = thickness_of_panels/2;
+    chest_mesh.add(bottom_panel);
+
+    const lateral_panel_type_1_geometry = new THREE.BoxGeometry(width_of_the_chest,height_of_the_chest,thickness_of_panels);
+    const lateral_panel_type_2_geometry = new THREE.BoxGeometry(thickness_of_panels,height_of_the_chest,depth_of_the_chest);
+
+    const lateral_panel_type_1_1_mesh =  new THREE.Mesh(lateral_panel_type_1_geometry,paper_material);
+    //lateral_panel_type_1_1_mesh.position.x= -width_of_the_chest/2;
+    lateral_panel_type_1_1_mesh.position.y= height_of_the_chest/2;
+    lateral_panel_type_1_1_mesh.position.z= -depth_of_the_chest/2;
+    //lateral_panel_type_1_1_mesh.rotation.y = Math.PI/2;
+    chest_mesh.add(lateral_panel_type_1_1_mesh);
+    
+    const lateral_panel_type_1_2_mesh =  new THREE.Mesh(lateral_panel_type_1_geometry,paper_material);
+    //lateral_panel_type_1_2_mesh.position.x= width_of_the_chest/2;
+    lateral_panel_type_1_2_mesh.position.y= height_of_the_chest/2;
+    lateral_panel_type_1_2_mesh.position.z= depth_of_the_chest/2;
+    //lateral_panel_type_1_2_mesh.rotation.y = Math.PI/2;
+    chest_mesh.add(lateral_panel_type_1_2_mesh);
+
+    const lateral_panel_type_2_1_mesh =  new THREE.Mesh(lateral_panel_type_2_geometry,paper_material);
+    lateral_panel_type_2_1_mesh.position.x= -width_of_the_chest/2;
+    lateral_panel_type_2_1_mesh.position.y= height_of_the_chest/2;
+    //lateral_panel_type_2_1_mesh.position.z= -depth_of_the_chest/2;
+    //lateral_panel_type_2_1_mesh.rotation.y = Math.PI/2;
+    chest_mesh.add(lateral_panel_type_2_1_mesh);
+    
+    const lateral_panel_type_2_2_mesh =  new THREE.Mesh(lateral_panel_type_2_geometry,paper_material);
+    lateral_panel_type_2_2_mesh.position.x= width_of_the_chest/2;
+    lateral_panel_type_2_2_mesh.position.y= height_of_the_chest/2;
+    //lateral_panel_type_2_2_mesh.position.z= depth_of_the_chest/2; 
+    //lateral_panel_type_2_2_mesh.rotation.y = Math.PI/2;
+    chest_mesh.add(lateral_panel_type_2_2_mesh);
+
+    scene.add(chest_mesh);
+    return chest_mesh;
 }

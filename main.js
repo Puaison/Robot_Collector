@@ -26,9 +26,9 @@ async function init() {
     //
 
 
-    await open_close_Threejs_Gripper(0,0.6,ur5gripper,10000);
+    await open_close_Threejs_Gripper(0,0.6,ur5gripper,1000);
 
-    const move_pose = [0.5,0.3,0.0,-Math.PI/2,0,-Math.PI/2];
+    const move_pose = [0.90,0.3,0.0,-Math.PI/2,0,-Math.PI/2];
     temp_q=inverse_Kinematics(move_pose,final_q,max_iterations, epsilon_position, epislon_orientation);
     const move_q=temp_q.map(angle => normalize_Angle(angle));
 
