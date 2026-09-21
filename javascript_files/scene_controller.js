@@ -1,4 +1,4 @@
-import { block_Height,robot_initial_joints_values,prova_inverse_kin, rest_q, floor_rows, floor_coloumns, floor_tile_size, floor_tile_height } from './config.js';
+import { block_Height,robot_initial_joints_values,prova_inverse_kin, rest_q, floor_rows, floor_coloumns, floor_tile_size, floor_tile_height,max_iterations,epsilon_position,epislon_orientation } from './config.js';
 import * as THREE from 'three';
 import { LoadingManager } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
@@ -6,6 +6,7 @@ import URDFLoader from 'urdf-loader';
 import GUI from 'lil-gui';
 import * as TWEEN from '@tweenjs/tween.js';
 import { normalize_Angle } from './utils.js';
+import { inverse_Kinematics } from './inverse_kinematics.js';
 
 //#region AMMO Setup
 const My_Ammo = await Ammo();
@@ -38,7 +39,10 @@ export let collectable_cube_mesh = null;
 export let collectable_cube_Ammo = null;
 
 export let object_collected = false;
-export let gripper_closed_value = null;
+export let last_gripper_value = 0.0;
+let last_q_configuration = null;
+const chest_meshes = [];
+let executing_animation = false;
 
 // Tween setup
 const My_TWEEN = new TWEEN.Group();
@@ -74,7 +78,7 @@ const camera = new THREE.PerspectiveCamera(
     0.01, //near
     500 //far
 );
-camera.position.set(1, 2, 2);
+camera.position.set(-0.5, 2.7, 1);
 //camera.lookAt(-5, -5, -5);
 
 
@@ -92,9 +96,10 @@ renderer.setSize(window.innerWidth, window.innerHeight); // define the size of t
 document.body.appendChild(renderer.domElement); // add the canvas to the DOM
 
 // Controls of the camera
-const cameracontrols = new OrbitControls(camera, renderer.domElement);
-cameracontrols.minDistance = 0.1;
-cameracontrols.maxDistance = 5;
+const camera_controls = new OrbitControls(camera, renderer.domElement);
+camera_controls.enablePan=true; //enable translation of the camera
+camera_controls.minDistance = 0.1;
+camera_controls.maxDistance = 5;
 
 //#region FLOOR Setup
 //#region Visual Floor description (IN Three.js)
@@ -171,8 +176,10 @@ scene.add(block);
 //#region CHESTS
 const chest_mesh_1 = create_chest();
 chest_mesh_1.position.x =0.85;
+chest_meshes.push(chest_mesh_1);
 const chest_mesh_2 = create_chest();
 chest_mesh_2.position.x =-0.85;
+chest_meshes.push(chest_mesh_2);
 
 //#endregion
 
@@ -196,6 +203,7 @@ export function load_Robot() {
                 if (prova_inverse_kin) {
                     update_Threejs_Robot_Joints(rest_q,robot);
                     console.log('UR5 loaded in IK!', robot);
+                    last_q_configuration = rest_q;
                 } else {
                     update_Threejs_Robot_Joints(robot_initial_joints_values,robot);
                     console.log('UR5 loaded normally!', robot);
@@ -272,7 +280,7 @@ export function animate(time) {
     renderer.setSize(window.innerWidth, window.innerHeight);
     camera.aspect = window.innerWidth/window.innerHeight;
     camera.updateProjectionMatrix();
-    cameracontrols.update();
+    camera_controls.update();
     My_TWEEN.update(time);
 
     if (ur5finger_sensor_left_Ammo && ur5finger_sensor_right_Ammo) { //skip this if the finger sensors are not already created
@@ -299,6 +307,7 @@ export function update_Threejs_Robot_Joints(q,robot_ur5) {
     robot_ur5.setJointValue('wrist_1_joint', q[3]); 
     robot_ur5.setJointValue('wrist_2_joint', q[4]);
     robot_ur5.setJointValue('wrist_3_joint', q[5]); //rotation only of the tooltip
+    //last_q_configuration = q; // If I update the last_q_configuration here and not in the tween it does not work (maybe depends on the normalization)
 }
 
 export function move_Threejs_Robot(q_initial, q_final, robot_ur5, duration = 5000) {
@@ -320,7 +329,7 @@ export function move_Threejs_Robot(q_initial, q_final, robot_ur5, duration = 500
                 const current_q = temp_q.map(angle => normalize_Angle(angle));
                 update_Threejs_Robot_Joints(current_q, robot_ur5);
             })
-            .onComplete(() => {resolve();}) //Function called at the end of the animation
+            .onComplete(() => {last_q_configuration=target; resolve();}) //Function called at the end of the animation
             .start(); //Let start the planned Tween
     });
 }
@@ -343,7 +352,7 @@ export function open_close_Threejs_Gripper(initial_value, final_value, robotiq_8
                     release_object();
                 }
                 robotiq_85_gripper.setJointValue('robotiq_85_left_knuckle_joint', current_value[0]);
-                gripper_closed_value = current_value[0];
+                last_gripper_value = current_value[0];
             })
             .onComplete(() => {resolve();}) //Function called at the end of the animation
             .start(); //Let start the planned Tween
@@ -392,7 +401,7 @@ function syncronize_finger_mesh_to_Ammo(mesh, rigid_body){
 
 export function create_collectable_object(position=[0.5,0.03,0.5]) {
     // NEW BLOCK TO GRASP
-    const collectable_object_size = 0.04; //0.03
+    const collectable_object_size = 0.047; //0.03
     const collectable_object_mass =1;
     const object_collectable_geometry = new THREE.BoxGeometry(
         collectable_object_size,
@@ -403,13 +412,19 @@ export function create_collectable_object(position=[0.5,0.03,0.5]) {
     const collectable_object_material = new THREE.MeshStandardMaterial({color: 0xffff44});
     const collectable_object_mesh = new THREE.Mesh(object_collectable_geometry,collectable_object_material);
     collectable_object_mesh.position.set(position[0], position[1], position[2]);
+    collectable_object_mesh.userData.id=1;
+    collectable_object_mesh.rotation.z=-Math.PI/2;
+    collectable_object_mesh.rotation.x=-Math.PI/2;
     scene.add(collectable_object_mesh);
+    console.log("Come è orientato",collectable_object_mesh.rotation);
 
     const collectable_object_shape_Ammo = new My_Ammo.btBoxShape(new My_Ammo.btVector3(collectable_object_size/2, collectable_object_size/2, collectable_object_size/2));
     const initial_transformation = new My_Ammo.btTransform();
     initial_transformation.setIdentity();
     initial_transformation.setOrigin(new My_Ammo.btVector3(position[0], position[1], position[2]));
-    initial_transformation.setRotation(new My_Ammo.btQuaternion(0,0,0,1));
+
+    const quaternion = collectable_object_mesh.quaternion;
+    initial_transformation.setRotation(new My_Ammo.btQuaternion(quaternion.x,quaternion.y,quaternion.z,quaternion.w));
     const initial_state_Ammo= new My_Ammo.btDefaultMotionState(initial_transformation);
     const collectable_object_inertia_Ammo=new My_Ammo.btVector3(0, 0, 0);
     collectable_object_shape_Ammo.calculateLocalInertia(collectable_object_mass,collectable_object_inertia_Ammo);
@@ -515,15 +530,13 @@ function release_object(){
     collectable_cube_Ammo.setCollisionFlags(collectable_cube_Ammo.getCollisionFlags() & ~2); //Necessary otherwise strange behaviour when releasing
 }
 
-function create_chest(position=[0.5,0.0,0.0]) {
+function create_chest() {
     const width_of_the_chest= 0.3; 
     const depth_of_the_chest= 0.3;
     const height_of_the_chest= 0.2;
     const thickness_of_panels= 0.005;
     const chest_mesh = new THREE.Group();
-    const paper_material = new THREE.MeshStandardMaterial({
-        color: 0xBA8940
-    });
+    const paper_material = new THREE.MeshStandardMaterial({color: 0xBA8940});
     
     const bottom_panel_geometry = new THREE.BoxGeometry(width_of_the_chest,thickness_of_panels,depth_of_the_chest);
     const bottom_panel = new THREE.Mesh(bottom_panel_geometry,paper_material);
@@ -563,4 +576,82 @@ function create_chest(position=[0.5,0.0,0.0]) {
 
     scene.add(chest_mesh);
     return chest_mesh;
+}
+
+renderer.domElement.addEventListener("click", mouse_clicked);
+
+function mouse_clicked(event){
+    if (!executing_animation){
+        const raycaster = new THREE.Raycaster();
+        const mouse_position = new THREE.Vector2();
+        const rect = renderer.domElement.getBoundingClientRect();
+
+        mouse_position.x = ((event.clientX-rect.left)/rect.width)*2 -1;
+
+        mouse_position.y = ((event.clientY-rect.top)/rect.height)*-2 +1;
+        raycaster.setFromCamera(mouse_position, camera);
+        if(!object_collected) {
+            const intersections_with_cubes = raycaster.intersectObject(collectable_cube_mesh, true);
+            if (intersections_with_cubes.length === 0) 
+                return;
+            executing_animation = true;
+            const clicked_cube = intersections_with_cubes[0].object;
+
+            const id_cube= clicked_cube.userData.id;
+            const center_cube_position = new THREE.Vector3();
+            clicked_cube.getWorldPosition(center_cube_position);
+            const cube_quaternion = new THREE.Quaternion();
+            clicked_cube.getWorldQuaternion(cube_quaternion);
+            const cube_orientation = new THREE.Euler();
+            cube_orientation.setFromQuaternion(cube_quaternion, 'XYZ');
+
+            // Call the function for the animation of collecting the selected cube
+            collect_animation(id_cube,center_cube_position,cube_orientation);
+        }
+        else {
+            const intersections_with_chests = raycaster.intersectObjects(chest_meshes, true);
+
+            if (intersections_with_chests.length === 0)
+                return;
+            executing_animation = true;
+            const first_intersected_child_panel = intersections_with_chests[0].object;
+            const clicked_chest = first_intersected_child_panel.parent;
+            const center_chest_position = new THREE.Vector3();
+            clicked_chest.getWorldPosition(center_chest_position);
+
+            const chest_orientation = [-Math.PI/2,0,-Math.PI/2];
+
+            // Call the function for the animation of releasing the cube in the selected chest
+            release_animation(center_chest_position,chest_orientation);
+        }
+    }
+    else {
+        return;
+    }
+}
+
+async function collect_animation(id, center_cube_position, cube_orientation) {
+    const mid_pose = [center_cube_position.x,center_cube_position.y + 0.2,center_cube_position.z,cube_orientation.x,cube_orientation.y,cube_orientation.z];
+    let temp_q =inverse_Kinematics(mid_pose,last_q_configuration,max_iterations, epsilon_position, epislon_orientation);
+    const mid_q = temp_q.map(angle => normalize_Angle(angle));
+    await move_Threejs_Robot(last_q_configuration,mid_q,ur5robot,1000);
+    const final_pose = [center_cube_position.x,center_cube_position.y,center_cube_position.z,cube_orientation.x,cube_orientation.y,cube_orientation.z];
+    temp_q=inverse_Kinematics(final_pose,last_q_configuration,max_iterations, epsilon_position, epislon_orientation);
+    const final_q=temp_q.map(angle => normalize_Angle(angle));
+    await move_Threejs_Robot(last_q_configuration,final_q,ur5robot,1000);
+    await open_close_Threejs_Gripper(last_gripper_value,0.6,ur5gripper,1000);
+    await move_Threejs_Robot(last_q_configuration,rest_q,ur5robot,1000);
+    executing_animation = false;
+}
+
+async function release_animation(center_chest_position, chest_orientation){
+    const move_pose = [center_chest_position.x,center_chest_position.y+0.55,center_chest_position.z,chest_orientation[0],chest_orientation[1],chest_orientation[2]];
+    //const move_pose = [-0.85,0.55,0.0,-Math.PI/2,0.0,-Math.PI/2];
+    let temp_q=inverse_Kinematics(move_pose,last_q_configuration,max_iterations+5000, epsilon_position, epislon_orientation);
+    const move_q=temp_q.map(angle => normalize_Angle(angle));
+    await move_Threejs_Robot(last_q_configuration,move_q,ur5robot,1000);
+    await open_close_Threejs_Gripper(last_gripper_value,0.0,ur5gripper,2000);
+    await move_Threejs_Robot(last_q_configuration,rest_q,ur5robot,1000);
+    executing_animation = false;
+
 }
