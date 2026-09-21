@@ -61,3 +61,5 @@ export const floor_rows = 20;
 export const floor_coloumns = 20;
 export const floor_tile_size = 0.1;
 export const floor_tile_height = 0.05;
+export const floor_Width = floor_coloumns * floor_tile_size;   // 2.0
+export const floor_Height = floor_tile_size;       // 0.05

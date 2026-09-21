@@ -3,7 +3,7 @@ import { normalize_Angle } from "./javascript_files/utils.js"
 import { robot_initial_joints_values,prova_inverse_kin, max_iterations, epsilon_position, epislon_orientation, rest_q, floor_rows, floor_coloumns, floor_tile_size, floor_tile_height } from './javascript_files/config.js';
 import { extract_T_from_q, extract_position_from_T, extract_RPY_from_T } from './javascript_files/direct_kinematics.js';
 import { inverse_Kinematics } from './javascript_files/inverse_kinematics.js';
-import {ur5robot, ur5gripper, renderer, floor_Visual, load_Robot, load_Gripper, animate,move_Threejs_Robot,scene, open_close_Threejs_Gripper,ur5finger_sensor_left_mesh,ur5finger_sensor_right_mesh,ur5finger_sensor_left_Ammo, ur5finger_sensor_right_Ammo, collectable_cube_mesh, collectable_cube_Ammo,create_collectable_object,set_cube_Ammo,set_cube_mesh,last_gripper_value} from './javascript_files/scene_controller.js'
+import {ur5robot, ur5gripper, renderer, floor_Visual, load_Robot, load_Gripper, animate,move_Threejs_Robot,scene, open_close_Threejs_Gripper,ur5finger_sensor_left_mesh,ur5finger_sensor_right_mesh,ur5finger_sensor_left_Ammo, ur5finger_sensor_right_Ammo,create_collectable_object,set_cube_Ammo,set_cube_mesh,last_gripper_value} from './javascript_files/scene_controller.js'
 
 async function init() {
     await load_Robot();
@@ -68,8 +68,8 @@ async function real_init(){
     await load_Gripper();
     // Collectable object
     const collectable=create_collectable_object();
-    set_cube_mesh(collectable[0]);  
-    set_cube_Ammo(collectable[1]);
+    set_cube_mesh(collectable.mesh);  
+    set_cube_Ammo(collectable.Ammo);
     //
 }
 

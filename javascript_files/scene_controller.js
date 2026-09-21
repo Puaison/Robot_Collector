@@ -35,13 +35,14 @@ export let ur5finger_sensor_right_mesh=null;
 export let ur5finger_sensor_left_Ammo = null;
 export let ur5finger_sensor_right_Ammo=null;
 
-export let collectable_cube_mesh = null;
-export let collectable_cube_Ammo = null;
+export let selected_cube_mesh = null;
+export let selected_cube_Ammo = null;
 
 export let object_collected = false;
 export let last_gripper_value = 0.0;
 let last_q_configuration = null;
 const chest_meshes = [];
+const collectable_cubes = [];
 let executing_animation = false;
 
 // Tween setup
@@ -438,29 +439,29 @@ export function create_collectable_object(position=[0.5,0.03,0.5]) {
     collectable_object_Ammo.setActivationState(4); //otherwise after sometime Ammo will deactivate it
     world_with_Physics.addRigidBody(collectable_object_Ammo);
 
-    return [collectable_object_mesh, collectable_object_Ammo];
+    return {mesh:collectable_object_mesh, Ammo:collectable_object_Ammo};
 }
 
 export function set_cube_mesh(mesh) {
-    collectable_cube_mesh = mesh;
+    selected_cube_mesh = mesh;
 }
 
 export function set_cube_Ammo(object_Ammo) {
-    collectable_cube_Ammo = object_Ammo;
-    collectable_cube_Ammo.setUserIndex(1);
+    selected_cube_Ammo = object_Ammo;
+    selected_cube_Ammo.setUserIndex(1);
 }
 
 function syncronize_Ammo_to_mesh(){
-    if (collectable_cube_mesh && collectable_cube_Ammo){
-        const motion_state = collectable_cube_Ammo.getMotionState();
-        const Ammo_tranformation = new My_Ammo.btTransform();
-        motion_state.getWorldTransform(Ammo_tranformation);
+    if (selected_cube_mesh && selected_cube_Ammo){
+        const motion_state = selected_cube_Ammo.getMotionState();
+        const Ammo_transformation = new My_Ammo.btTransform();
+        motion_state.getWorldTransform(Ammo_transformation);
 
-        const position = Ammo_tranformation.getOrigin();
-        const orientation = Ammo_tranformation.getRotation();
+        const position = Ammo_transformation.getOrigin();
+        const orientation = Ammo_transformation.getRotation();
 
-        collectable_cube_mesh.position.set(position.x(),position.y(),position.z());
-        collectable_cube_mesh.quaternion.set(orientation.x(), orientation.y(), orientation.z(), orientation.w());
+        selected_cube_mesh.position.set(position.x(),position.y(),position.z());
+        selected_cube_mesh.quaternion.set(orientation.x(), orientation.y(), orientation.z(), orientation.w());
 
     }
     else {
@@ -469,25 +470,25 @@ function syncronize_Ammo_to_mesh(){
 }
 
 function syncronize_mesh_to_Ammo(){
-    if (collectable_cube_mesh && collectable_cube_Ammo){
+    if (selected_cube_mesh && selected_cube_Ammo){
         const position = new THREE.Vector3();
         const orientation = new THREE.Quaternion();
-        collectable_cube_mesh.getWorldPosition(position);
-        collectable_cube_mesh.getWorldQuaternion(orientation);
+        selected_cube_mesh.getWorldPosition(position);
+        selected_cube_mesh.getWorldQuaternion(orientation);
 
-        const Ammo_tranformation = new My_Ammo.btTransform();
-        Ammo_tranformation.setIdentity();
+        const Ammo_transformation = new My_Ammo.btTransform();
+        Ammo_transformation.setIdentity();
 
-        const Ammo_position = Ammo_tranformation.getOrigin();
+        const Ammo_position = Ammo_transformation.getOrigin();
         Ammo_position.setValue(position.x,position.y,position.z);
 
-        Ammo_tranformation.setRotation(new My_Ammo.btQuaternion(orientation.x,orientation.y,orientation.z,orientation.w));
-        collectable_cube_Ammo.setWorldTransform(Ammo_tranformation);
-        const motion_state = collectable_cube_Ammo.getMotionState();
+        Ammo_transformation.setRotation(new My_Ammo.btQuaternion(orientation.x,orientation.y,orientation.z,orientation.w));
+        selected_cube_Ammo.setWorldTransform(Ammo_transformation);
+        const motion_state = selected_cube_Ammo.getMotionState();
 
         
-        motion_state.setWorldTransform(Ammo_tranformation);
-        world_with_Physics.updateSingleAabb(collectable_cube_Ammo);
+        motion_state.setWorldTransform(Ammo_transformation);
+        world_with_Physics.updateSingleAabb(selected_cube_Ammo);
 
     }
     else {
@@ -518,16 +519,16 @@ function detect_collisions_between(Id_object_Ammo_1, Id_object_Ammo_2){
 
 function collect_object(){
     object_collected = true;
-    ur5tcp.attach(collectable_cube_mesh);
-    collectable_cube_mesh.position.set(0,0,0);
-    collectable_cube_mesh.quaternion.identity();
-    collectable_cube_Ammo.setCollisionFlags(collectable_cube_Ammo.getCollisionFlags() | 2); //Necessary otherwise strange behaviour when releasing
+    ur5tcp.attach(selected_cube_mesh);
+    selected_cube_mesh.position.set(0,0,0);
+    selected_cube_mesh.quaternion.identity();
+    selected_cube_Ammo.setCollisionFlags(selected_cube_Ammo.getCollisionFlags() | 2); //Necessary otherwise strange behaviour when releasing
 }
 
 function release_object(){
     object_collected = false;
-    scene.attach(collectable_cube_mesh);
-    collectable_cube_Ammo.setCollisionFlags(collectable_cube_Ammo.getCollisionFlags() & ~2); //Necessary otherwise strange behaviour when releasing
+    scene.attach(selected_cube_mesh);
+    selected_cube_Ammo.setCollisionFlags(selected_cube_Ammo.getCollisionFlags() & ~2); //Necessary otherwise strange behaviour when releasing
 }
 
 function create_chest() {
@@ -591,7 +592,7 @@ function mouse_clicked(event){
         mouse_position.y = ((event.clientY-rect.top)/rect.height)*-2 +1;
         raycaster.setFromCamera(mouse_position, camera);
         if(!object_collected) {
-            const intersections_with_cubes = raycaster.intersectObject(collectable_cube_mesh, true);
+            const intersections_with_cubes = raycaster.intersectObject(selected_cube_mesh, true);
             if (intersections_with_cubes.length === 0) 
                 return;
             executing_animation = true;
