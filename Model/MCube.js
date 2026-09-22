@@ -1,13 +1,24 @@
 import {Ammo_environment} from './Ammo_environment';
-
+/**
+ * This class represents one cube in the Ammo environment that can be collected by the robot.
+ * 
+ * Responsibility: it gathers informations necessary for managing and modelling the rigid body of a specific cube in the Singleton Ammo physics world
+ */
 export class MCube {
     #ID;
 
     #dimenions;
     
-    //This is the body of the cube in the Ammo environment and contains all the physical informations about the cube (like position and orientation)
+    /** @type {btRigidBody} This is the rigid body of the cube in the Singleton Ammo physics world, and contains all the physical informations about the cube (size,mass,inertia) */
     #body_Ammo=null;
 
+    /**
+     * Create the cube in the Singleton Ammo physics world
+     * @param {int} id Identifier assigned to the specific cube
+     * @param {float} dim Geometric dimensions
+     * @param {Float32Array} position Array with x,y,z coordinates of the center of the cube
+     * @param {Float32Array} quaternion Array with x,y,z,w quaternion of the cube
+     */
     constructor(id=1, dim, position=[0.5,0.03,0.5],quaternion=[-0.5,-0.5,-0.5,0.5]){
         this.#ID=id;
         this.#dimenions=dim;
@@ -75,7 +86,10 @@ export class MCube {
     get_ID() {
         return this.#ID;
     }
-
+    /**
+     * Get the rigid body of this spefic cube in the Singleton Ammo physics world
+     * @returns {btRigidBody} the cube in the Singleton Ammo physics world
+     */
     get_Cube_Ammo() {
         return this.#body_Ammo;
     }

@@ -238,7 +238,7 @@ export class CScene {
         VScene.getInstance().get_camera().updateProjectionMatrix();
         VScene.getInstance().get_camera_controls().update();
         this.#My_TWEEN.update(time);
-        if (this.#robot.get_cgripper().get_mgripper().get_finger_sensor_left_Ammo() && this.#robot.get_cgripper().get_mgripper().get_finger_sensor_right_Ammo()) { //skip this if the finger sensors are not already created
+        if (this.#robot.get_cgripper().get_mgripper().get_finger_contact_sensor_left_Ammo() && this.#robot.get_cgripper().get_mgripper().get_finger_contact_sensor_right_Ammo()) { //skip this if the finger sensors are not already created
             this.#robot.get_cgripper().syncronize_finger_mesh_to_Ammo();
         }
         this.#timer.update();

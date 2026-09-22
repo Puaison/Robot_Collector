@@ -1,10 +1,14 @@
 import { MCube } from './MCube';
+/**
+ * This class represents one chest and the relative informations of a chest
+ */
 export class MChest {
     #width;
     #height;
     #depth;
+    /** @type {float} Thickness of each paper-panel that composes the chest*/
     #thickness;
-
+    /** @type {Array of MCube} Array containing all the MCube leaved in this specific chest*/
     #mcubes=[];
     constructor(width_of_the_chest= 0.3,depth_of_the_chest= 0.3,height_of_the_chest= 0.2,thickness_of_panels= 0.005){
         this.#width=width_of_the_chest;
@@ -13,11 +17,11 @@ export class MChest {
         this.#thickness=thickness_of_panels;
     }
 
-    get_Cubes(){
+    get_MCubes(){
         return this.#mcubes;
     }
 
-    add_Cube(MCube){
+    add_MCube(MCube){
         this.#mcubes.push(MCube);
     }
 }

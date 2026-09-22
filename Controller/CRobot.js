@@ -22,7 +22,7 @@ export class CRobot{
         await this.#cgripper.load_CGripper(this.#vrobot.get_loader());
         this.#vrobot.get_robot_mesh().joints["wrist_3_joint"].add(this.#cgripper.get_vgripper().get_gripper_mesh());
 
-        this.#mrobot.set_gripper(this.#cgripper.get_mgripper()) //Now if we query the MRobot, it will also take into account the gripper for the direct kinematics
+        this.#mrobot.set_MGripper(this.#cgripper.get_mgripper()) //Now if we query the MRobot, it will also take into account the gripper for the direct kinematics
         this.#vrobot.set_last_q_configuration(rest_q);
         this.#mrobot.set_last_q_configuration(rest_q);
         this.#cgripper.get_vgripper().set_last_gripper_value(0.0);

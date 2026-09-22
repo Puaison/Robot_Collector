@@ -16,7 +16,7 @@ export class CCube{
         VFloor.getInstance().add_Cube(this.#vcube);
 
         this.#mcube= new MCube(id,dim,position,quaternion);
-        MFloor.getInstance().add_Cube(this.#mcube);
+        MFloor.getInstance().add_MCube(this.#mcube);
     }
 
     syncronize_Ammo_to_mesh(){

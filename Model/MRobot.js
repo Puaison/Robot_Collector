@@ -1,13 +1,24 @@
 import * as THREE from 'three';
-//import { MGripper } from './MGripper';
 import { get_pose_Error,normalize_Angle } from '../javascript_files/utils';
 import { block_Height, DH_A, DH_D,  DH_ALPHA } from "../javascript_files/config"
 import { get_Tranpose_of_6x6_Matrix, get_Matrix_multiplication_6x6,get_Matrix_Vector_multiplication_6x1 } from "../javascript_files/matrix_operations";
 import { Matrix,inverse } from 'ml-matrix';
+/**
+ * This class represents one robot with its direct and inverse kinematics algorithms and formulas.
+ * 
+ * Responsibility: It calculate the pose of the robot given the joints configuration or viceversa.
+ */
 export class MRobot{
-    #fixed_transformations=null;
+    /** @type {Matrix4} This is the initial homogeneous transformation caused by different conventions of the base frame, by the offset w.r.t the floor and by the rotation compensation for placing the base of the robot parallel to the floor  */
+    #base_transformations=null;
+    /** @type {MGripper} Gripper mounted on the tool space of the robot  */
     #mgripper=null;
+    /** @type {Array of float} The current value of the joints of the robot */
     #last_q_configuration = null;
+    /**
+     * Create the fixed base transformation
+     * @param {float} offset distance from the floor
+     */
     constructor(offset=block_Height){
         // Place the robot above the box
         const T_y = new THREE.Matrix4().makeTranslation(0, offset, 0);
@@ -18,7 +29,7 @@ export class MRobot{
         // Three.js mesh rotation around x-axis in order to have the robot standing on the floor
         const T_x = new THREE.Matrix4().makeRotationX(-Math.PI/2);
 
-        this.#fixed_transformations = new THREE.Matrix4()
+        this.#base_transformations = new THREE.Matrix4()
             .multiply(T_y)
             .multiply(T_x)
             .multiply(T_z);
@@ -33,8 +44,8 @@ export class MRobot{
         return this.#last_q_configuration;
     }
 
-    set_gripper(mgripper){
-        this.#mgripper= mgripper;
+    set_MGripper(MGripper){
+        this.#mgripper= MGripper;
     }
 
     get_gripper(){
@@ -111,7 +122,7 @@ export class MRobot{
         // Obtain the Final DH Canonical Transformation Matrix for the gripper
         
         const T0G = new THREE.Matrix4()
-            .multiply(this.#fixed_transformations)
+            .multiply(this.#base_transformations)
             .multiply(T01)
             .multiply(T12)
             .multiply(T23)

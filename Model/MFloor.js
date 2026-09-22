@@ -1,11 +1,17 @@
 import {Ammo_environment} from './Ammo_environment';
 import { floor_Width, floor_Height } from '../javascript_files/config';
 import { MCube } from './MCube';
+/**
+ * This class represents the floor in the Ammo environment. It is a Singleton class as only one floor can be present. 
+ * 
+ * Responsibility: it gathers informations necessary for managing and modelling the rigid body of the floor in the Singleton Ammo physics world
+ */
 export class MFloor{
+    /** @type {MFloor} the singleton instance of this class */
     static #instance = null;
-
+    /** @type {Array of MCube} The collections of cubes that are on the floor*/
     #mcubes=[];
-
+    /** @type {btRigidBody} This is the rigid body of the floor in the Singleton Ammo physics world, and contains all the physical informations (size,mass,inertia) */
     #floor_Ammo = null;
 
     constructor(){
@@ -34,7 +40,10 @@ export class MFloor{
         this.#floor_Ammo = new Ammo.btRigidBody(floor_info); //Finally, create the rigid body with the info described above
         Ammo_environment.getInstance().get_World().addRigidBody(this.#floor_Ammo);
     }
-
+    /**
+     * Returns the single instance of the class MFloor
+     * @returns {MFloor} Singleton instance of MFloor
+     */
     static getInstance() {
         if (MFloor.#instance === null) {
             MFloor.#instance = new MFloor();
@@ -43,7 +52,7 @@ export class MFloor{
         return MFloor.#instance;
     }
 
-    get_Cubes(){
+    get_MCubes(){
         return this.#mcubes;
     }
 
@@ -51,11 +60,11 @@ export class MFloor{
         return this.#floor_Ammo;
     }
 
-    add_Cube(MCube){
+    add_MCube(MCube){
         this.#mcubes.push(MCube);
     }
 
-    remove_Cube(MCube){
+    remove_MCube(MCube){
         const index = this.#mcubes.indexOf(MCube);
         this.#mcubes.splice(index,1);
     }
