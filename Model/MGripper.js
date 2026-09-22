@@ -4,6 +4,8 @@ export class MGripper{
     #finger_sensor_left_Ammo=null;
     #finger_sensor_right_Ammo=null;
     #homogeneous_coordinates=null;
+    #last_gripper_value = 0.0;
+
     constructor(finger_sensor_mesh_left,finger_sensor_mesh_right){
         this.#finger_sensor_left_Ammo=create_physical_finger_sensor(finger_sensor_mesh_left);
         this.#finger_sensor_left_Ammo.setUserIndex(2000);
@@ -28,6 +30,14 @@ export class MGripper{
 
     get_finger_sensor_right_Ammo() {
         return this.#finger_sensor_right_Ammo;
+    }
+
+    get_last_gripper_value() {
+        return this.#last_gripper_value;
+    }
+
+    set_last_gripper_value(value) {
+        this.#last_gripper_value=value;
     }
 }
 export function syncronize_finger_mesh_to_Ammo(mesh, rigid_body){

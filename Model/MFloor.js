@@ -4,7 +4,7 @@ import { MCube } from './MCube';
 export class MFloor{
     static #instance = null;
 
-    #cubes=[];
+    #mcubes=[];
 
     #floor_Ammo = null;
 
@@ -36,30 +36,30 @@ export class MFloor{
     static getInstance() {
         if (MFloor.#instance === null) {
             MFloor.#instance = new MFloor();
-            MFloor.#instance.MFloor();
+            //MFloor.#instance.MFloor();
         }
         return MFloor.#instance;
     }
 
     get_Cubes(){
-        return this.#cubes;
+        return this.#mcubes;
     }
 
     get_Floor_Ammo(){
         return this.#floor_Ammo;
     }
 
-    add_Cubes(Cube){
-        this.#cubes.push(Cube);
+    add_Cubes(MCube){
+        this.#mcubes.push(MCube);
     }
 
-    remove_Cube(Cube){
-        const index = this.#cubes.indexOf(Cube);
-        this.#cubes.splice(index,1);
+    remove_Cube(MCube){
+        const index = this.#mcubes.indexOf(MCube);
+        this.#mcubes.splice(index,1);
     }
 
     search_Cube(id){
-        for (const Cube of this.#cubes) {
+        for (const Cube of this.#mcubes) {
             if (Cube.get_ID() === id)
                 return Cube;
         }

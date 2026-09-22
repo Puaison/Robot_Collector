@@ -5,7 +5,7 @@ export class MChest {
     #depth;
     #thickness;
 
-    #cubes=[];
+    #mcubes=[];
     constructor(width_of_the_chest= 0.3,depth_of_the_chest= 0.3,height_of_the_chest= 0.2,thickness_of_panels= 0.005){
         this.#width=width_of_the_chest;
         this.#depth=depth_of_the_chest;
@@ -14,10 +14,10 @@ export class MChest {
     }
 
     get_Cubes(){
-        return this.#cubes;
+        return this.#mcubes;
     }
 
-    add_Cubes(Cube){
-        this.#cubes.push(Cube);
+    add_Cube(MCube){
+        this.#mcubes.push(MCube);
     }
 }

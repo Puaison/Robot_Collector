@@ -6,7 +6,8 @@ import { get_Tranpose_of_6x6_Matrix, get_Matrix_multiplication_6x6,get_Matrix_Ve
 import { Matrix,inverse } from 'ml-matrix';
 export class MRobot{
     #fixed_transformations=null;
-    #gripper=null;
+    #mgripper=null;
+    #last_q_configuration = null;
     constructor(offset=block_Height){
         // Place the robot above the box
         const T_y = new THREE.Matrix4().makeTranslation(0, offset, 0);
@@ -21,16 +22,23 @@ export class MRobot{
             .multiply(T_y)
             .multiply(T_x)
             .multiply(T_z);
-        
-
+    
     }
 
-    set_gripper(gripper){
-        this.#gripper= gripper;
+    set_last_q_configuration(q) {
+        this.#last_q_configuration=q;
+    }
+
+    get_last_q_configuration() {
+        return this.#last_q_configuration;
+    }
+
+    set_gripper(mgripper){
+        this.#mgripper= mgripper;
     }
 
     get_gripper(){
-        return this.#gripper;
+        return this.#mgripper;
     }
 
     get_DH_Matrix(a, d, alpha, q_i){
@@ -91,11 +99,11 @@ export class MRobot{
             q[5]
         );
 
-        if(this.#gripper === null) { 
+        if(this.#mgripper === null) { 
             const T6G = new THREE.Matrix4();
         }
         else {
-            const T6G = this.#gripper.get_homogeneous_coordinates();
+            const T6G = this.#mgripper.get_homogeneous_coordinates();
         }
 
         // Obtain the Final DH Canonical Transformation Matrix for the gripper
@@ -166,8 +174,8 @@ export class MRobot{
     extract_RPY_from_T(T){
         const R = new THREE.Matrix4().extractRotation(T);
         const RPY = new THREE.Euler();
-        //RPY.setFromRotationMatrix(R, 'ZYX');
-        RPY.setFromRotationMatrix(R, 'XYZ');
+        RPY.setFromRotationMatrix(R, 'ZYX');
+        //RPY.setFromRotationMatrix(R, 'XYZ');
         const roll  = RPY.x;
         const pitch = RPY.y;
         const yaw   = RPY.z;
