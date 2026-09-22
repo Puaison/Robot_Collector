@@ -57,6 +57,10 @@ export class VGripper {
         return this.#finger_sensor_left_mesh;
     }
 
+    get_gripper_mesh(){
+        return this.#ur5gripper;
+    }
+
     get_finger_sensor_right_mesh() {
         return this.#finger_sensor_right_mesh;
     }

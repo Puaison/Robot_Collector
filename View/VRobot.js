@@ -2,7 +2,7 @@ import { LoadingManager } from 'three';
 import URDFLoader from 'urdf-loader';
 import { rest_q,block_Height } from '../javascript_files/config';
 export class VRobot {
-    #vgripper = null;
+    //#vgripper = null;
 
     #loader = null;
     #ur5robot = null;
@@ -21,28 +21,29 @@ export class VRobot {
 
     set_last_q_configuration(q) {
         this.#last_q_configuration=q;
+        //Maybe call here the update_Threejs_Robot_Joints
     }
 
     get_last_q_configuration() {
         return this.#last_q_configuration;
     }
+    //Maybe this it is not necessary
+    // async set_gripper(vgripper){
+    //     this.#vgripper= vgripper;
+    //     this.#vgripper.set_loader(this.#loader);
+    //     await this.#vgripper.load_VGripper();
+    // }
 
-    async set_gripper(vgripper){
-        this.#vgripper= vgripper;
-        this.#vgripper.set_loader(this.#loader);
-        await this.#vgripper.load_VGripper();
-    }
-
-    get_gripper(){
-        return this.#vgripper;
-    }
+    // get_gripper(){
+    //     return this.#vgripper;
+    // }
 
     load_VRobot() {
         return new Promise((resolve, reject) => {
             this.#loader.load(
                 '/ur5/ur5.urdf',
                 robot => {
-                    this.ur5robot = robot;
+                    this.#ur5robot = robot;
                     //scene.add(robot);
                     this.update_Threejs_Robot_Joints(rest_q);
                     this.#last_q_configuration = rest_q;
@@ -59,6 +60,10 @@ export class VRobot {
         });
     }
 
+    get_loader(){
+        return this.#loader;
+    }
+
     update_Threejs_Robot_Joints(q) {
         this.#ur5robot.setJointValue('shoulder_pan_joint', q[0]); //this rotate the base
         this.#ur5robot.setJointValue('shoulder_lift_joint', q[1]); // this make the robot up
@@ -67,5 +72,9 @@ export class VRobot {
         this.#ur5robot.setJointValue('wrist_2_joint', q[4]);
         this.#ur5robot.setJointValue('wrist_3_joint', q[5]); //rotation only of the tooltip
         //last_q_configuration = q; // If I update the last_q_configuration here and not in the tween it does not work (maybe depends on the normalization)
-        }
+    }
+
+    get_robot_mesh(){
+        return this.#ur5robot;
+    }
 }

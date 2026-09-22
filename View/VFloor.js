@@ -55,7 +55,7 @@ export class VFloor{
         return this.#floor_mesh;
     }
 
-    add_Cubes(VCube){
+    add_Cube(VCube){
         this.#vcubes.push(VCube);
     }
 
@@ -65,9 +65,9 @@ export class VFloor{
     }
 
     search_Cube(id){
-        for (const Cube of this.#vcubes) {
-            if (Cube.get_ID() === id)
-                return Cube;
+        for (const VCube of this.#vcubes) {
+            if (VCube.get_ID() === id)
+                return VCube;
         }
         return null;
     }

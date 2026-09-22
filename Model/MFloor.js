@@ -49,7 +49,7 @@ export class MFloor{
         return this.#floor_Ammo;
     }
 
-    add_Cubes(MCube){
+    add_Cube(MCube){
         this.#mcubes.push(MCube);
     }
 
@@ -59,9 +59,9 @@ export class MFloor{
     }
 
     search_Cube(id){
-        for (const Cube of this.#mcubes) {
-            if (Cube.get_ID() === id)
-                return Cube;
+        for (const MCube of this.#mcubes) {
+            if (MCube.get_ID() === id)
+                return MCube;
         }
         return null;
     }

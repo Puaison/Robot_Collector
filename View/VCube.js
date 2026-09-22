@@ -1,13 +1,13 @@
 import * as THREE from 'three';
-export class VCubes{
+export class VCube{
     #ID;
 
     #dimenions;
 
     //This is the body of the cube in the three.js environment and represents its mesh.
-    #body_mesh;
+    #body_mesh=null;
 
-    constructor(id, dim=0.047, position=[0.5,0.03,0.5],quaternion=[-0.5,-0.5,-0.5,0.5]){
+    constructor(id=1, dim=0.047, position=[0.5,0.03,0.5],quaternion=[-0.5,-0.5,-0.5,0.5]){
         const cube_collectable_geometry = new THREE.BoxGeometry(dim,dim,dim);
         this.#dimenions=dim;
     

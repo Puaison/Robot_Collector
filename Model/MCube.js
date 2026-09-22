@@ -6,9 +6,9 @@ export class MCube {
     #dimenions;
     
     //This is the body of the cube in the Ammo environment and contains all the physical informations about the cube (like position and orientation)
-    #body_Ammo;
+    #body_Ammo=null;
 
-    constructor(id, dim, position=[0.5,0.03,0.5],quaternion=[-0.5,-0.5,-0.5,0.5]){
+    constructor(id=1, dim, position=[0.5,0.03,0.5],quaternion=[-0.5,-0.5,-0.5,0.5]){
         this.#ID=id;
         this.#dimenions=dim;
 

@@ -84,4 +84,8 @@ export class VScene{
     add_mesh(mesh) {
         this.#scene.add(mesh);
     }
+
+    get_scene(){
+        return this.#scene;
+    }
 }
