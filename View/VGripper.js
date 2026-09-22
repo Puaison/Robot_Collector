@@ -1,3 +1,5 @@
+import * as THREE from 'three';
+
 export class VGripper {
     #finger_sensor_left_mesh=null;
     #finger_sensor_right_mesh=null;

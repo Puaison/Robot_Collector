@@ -13,7 +13,7 @@ export class CChest{
         this.#vchest.get_Chest_mesh().position.x = position[0];
         this.#vchest.get_Chest_mesh().position.y = position[1];
         this.#vchest.get_Chest_mesh().position.z = position[2];
-        VScene.getInstance().add_mesh(this.#vchest.get_Cube_mesh());
+        VScene.getInstance().add_mesh(this.#vchest.get_Chest_mesh());
 
         this.#mchest= new MChest(width_of_the_chest,depth_of_the_chest,height_of_the_chest,thickness_of_panels);
     }

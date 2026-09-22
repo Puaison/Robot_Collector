@@ -11,13 +11,12 @@ export class VCube{
         const cube_collectable_geometry = new THREE.BoxGeometry(dim,dim,dim);
         this.#dimenions=dim;
     
-        const collectable_object_material = new THREE.MeshStandardMaterial({color: 0xffff44});
-        this.#body_mesh = new THREE.Mesh(object_collectable_geometry,collectable_object_material);
+        const cube_collectable_material = new THREE.MeshStandardMaterial({color: 0xffff44});
+        this.#body_mesh = new THREE.Mesh(cube_collectable_geometry,cube_collectable_material);
         this.#body_mesh.position.set(position[0], position[1], position[2]);
-        this.#body_mesh.userData.id=1;
+        this.#body_mesh.userData.id=id;
         this.#body_mesh.rotation.z=-Math.PI/2;
         this.#body_mesh.rotation.x=-Math.PI/2;
-        //scene.add(collectable_object_mesh);
     }
 
     get_position(){

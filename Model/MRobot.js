@@ -98,12 +98,14 @@ export class MRobot{
             DH_ALPHA[5],
             q[5]
         );
+        
+        let T6G = null;
 
         if(this.#mgripper === null) { 
-            const T6G = new THREE.Matrix4();
+            T6G = new THREE.Matrix4();
         }
         else {
-            const T6G = this.#mgripper.get_homogeneous_coordinates();
+            T6G = this.#mgripper.get_homogeneous_coordinates();
         }
 
         // Obtain the Final DH Canonical Transformation Matrix for the gripper

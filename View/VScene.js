@@ -48,9 +48,9 @@ export class VScene{
 
 
 
-        // GUI
-        const gui= new GUI();
-        gui.add(this.#camera, 'fov', 1, 180).onChange(animate);
+        // // GUI
+        // const gui= new GUI();
+        // gui.add(this.#camera, 'fov', 1, 180).onChange(animate);
 
 
 
@@ -87,5 +87,17 @@ export class VScene{
 
     get_scene(){
         return this.#scene;
+    }
+
+    get_renderer() {
+        return this.#renderer;
+    }
+
+    get_camera(){
+        return this.#camera;
+    }
+
+    get_camera_controls(){
+        return this.#camera_controls;
     }
 }

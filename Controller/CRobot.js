@@ -3,13 +3,12 @@ import { MRobot } from '../Model/MRobot';
 import { VRobot } from '../View/VRobot';
 import { VScene } from '../View/VScene';
 import { CGripper } from './CGripper';
-import { rest_q } from '../javascript_files/config';
 
 export class CRobot{
     #mrobot=null;
     #vrobot=null;
     #cgripper=null; // From here we can access both vgripper and mgripper
-    #cube_collected=null;
+    #cube_collected=null; //Maybe not necessary as managed by CScene
 
     constructor(offset = block_Height) {
         this.#vrobot = new VRobot(offset);
@@ -32,5 +31,13 @@ export class CRobot{
 
     get_cgripper(){
         return this.#cgripper;
+    }
+
+    get_vrobot() {
+        return this.#vrobot;
+    }
+
+    get_mrobot() {
+        return this.#mrobot;
     }
 }

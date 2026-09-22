@@ -1,4 +1,5 @@
 import { floor_rows, floor_coloumns, floor_tile_size, floor_tile_height } from '../javascript_files/config';
+import * as THREE from 'three';
 export class VFloor{
     static #instance = null;
 
