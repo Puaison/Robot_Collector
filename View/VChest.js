@@ -1,4 +1,9 @@
 import * as THREE from 'three';
+/**
+ * This class represents the mesh chest in the Three.js environment that is a Three.js group which gathers  
+ * 
+ * Responsibility: It models the group mesh of a specific chest; It also remebers which cubes are placed in it.
+ */
 export class VChest{
     #width;
     #height;
@@ -54,11 +59,11 @@ export class VChest{
         return this.#body_mesh;
     }
 
-    get_Cubes(){
+    get_VCubes(){
         return this.#vcubes;
     }
 
-    add_Cube(VCube){
+    add_VCube(VCube){
         this.#vcubes.push(VCube);
     }
 

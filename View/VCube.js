@@ -1,4 +1,9 @@
 import * as THREE from 'three';
+/**
+ * This class represents the mesh cube in the Three.js environment that can be collected by the robot.
+ * 
+ * Responsibility: It models the mesh of a specific cube and recovers informations like position and orientation from the mesh in the scene.
+ */
 export class VCube{
     #ID;
 

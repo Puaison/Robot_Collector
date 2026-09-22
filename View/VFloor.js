@@ -1,5 +1,10 @@
 import { floor_rows, floor_coloumns, floor_tile_size, floor_tile_height } from '../javascript_files/config';
 import * as THREE from 'three';
+/**
+ * This class represents the mesh floor in the Three.js environment. It is a Singleton class as only one floor can be present.
+ * 
+ * Responsibility: It models the mesh of the floor. It also remebers which cubes are placed on it.
+ */
 export class VFloor{
     static #instance = null;
 
@@ -48,7 +53,7 @@ export class VFloor{
         return VFloor.#instance;
     }
 
-    get_Cubes(){
+    get_VCubes(){
         return this.#vcubes;
     }
 
@@ -56,16 +61,16 @@ export class VFloor{
         return this.#floor_mesh;
     }
 
-    add_Cube(VCube){
+    add_VCube(VCube){
         this.#vcubes.push(VCube);
     }
 
-    remove_Cube(VCube){
+    remove_VCube(VCube){
         const index = this.#vcubes.indexOf(VCube);
         this.#vcubes.splice(index,1);
     }
 
-    search_Cube(id){
+    search_VCube(id){
         for (const VCube of this.#vcubes) {
             if (VCube.get_ID() === id)
                 return VCube;

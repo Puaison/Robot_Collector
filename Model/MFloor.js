@@ -4,7 +4,7 @@ import { MCube } from './MCube';
 /**
  * This class represents the floor in the Ammo environment. It is a Singleton class as only one floor can be present. 
  * 
- * Responsibility: it gathers informations necessary for managing and modelling the rigid body of the floor in the Singleton Ammo physics world
+ * Responsibility: it gathers informations necessary for managing and modelling the rigid body of the floor in the Singleton Ammo physics world. It also remebers which cubes are placed on it.
  */
 export class MFloor{
     /** @type {MFloor} the singleton instance of this class */

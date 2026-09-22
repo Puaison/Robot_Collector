@@ -4,6 +4,11 @@ import { VScene } from "../View/VScene";
 import { VFloor } from "../View/VFloor";
 import { MFloor } from "../Model/MFloor";
 import { Ammo_environment } from "../Model/Ammo_environment";
+/**
+ * This class is the controller of a particular Cube object and it is responsible to add the cube-mesh to the scene.
+ * 
+ * Responsibility: syncronizes the data, transformations and operations between the visual part (mesh) and the physical part of the same cube in the Ammo environment.
+ */
 export class CCube{
     #ID = null;
     #vcube = null;
@@ -13,12 +18,15 @@ export class CCube{
         this.#ID =id;
         this.#vcube= new VCube(id,dim,position,quaternion);
         VScene.getInstance().add_mesh(this.#vcube.get_Cube_mesh());
-        VFloor.getInstance().add_Cube(this.#vcube);
+        VFloor.getInstance().add_VCube(this.#vcube);
 
         this.#mcube= new MCube(id,dim,position,quaternion);
         MFloor.getInstance().add_MCube(this.#mcube);
     }
-
+    /**
+     * Takes the info from the rigid body of the cube in the Ammo env and copies them to the mesh in the scene.
+     * Used when the cube is not grasped by the robot (cube dynamic)
+     */
     syncronize_Ammo_to_mesh(){
         if (this.#vcube.get_Cube_mesh() && this.#mcube.get_Cube_Ammo()){
             const motion_state = this.#mcube.get_Cube_Ammo().getMotionState();
@@ -37,6 +45,10 @@ export class CCube{
         }
     }
 
+    /**
+     * Takes the info from the mesh of the cube and copies them to the rigid body in the Ammo env 
+     * Used when the robot has grasped the cube (cube only kinetic)
+     */
     syncronize_mesh_to_Ammo(){
         if (this.#vcube.get_Cube_mesh() && this.#mcube.get_Cube_Ammo()){
             const position = new THREE.Vector3();
@@ -64,11 +76,11 @@ export class CCube{
         }
     }
 
-    get_vcube() {
+    get_VCube() {
         return this.#vcube;
     }
 
-    get_mcube() {
+    get_MCube() {
         return this.#mcube
     }
 

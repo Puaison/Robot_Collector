@@ -23,11 +23,11 @@ export class CScene {
         //Create the two chests
         const cchest_1= new CChest([0.85,0,0]);
         this.#cchests.push(cchest_1);
-        this.#vchests_array.push(cchest_1.get_vchest().get_Chest_mesh())
+        this.#vchests_array.push(cchest_1.get_VChest().get_Chest_mesh())
 
         const cchest_2= new CChest([-0.85,0,0]);
         this.#cchests.push(cchest_2);
-        this.#vchests_array.push(cchest_2.get_vchest().get_Chest_mesh())
+        this.#vchests_array.push(cchest_2.get_VChest().get_Chest_mesh())
 
         // Create the Floor
         CFloor.getInstance();
@@ -80,8 +80,8 @@ export class CScene {
     //we need to give the id.
     collect_object(){
         this.#object_collected = true;
-        const selected_cube_mesh = this.#selected_cube.get_vcube().get_Cube_mesh();
-        const selected_cube_Ammo = this.#selected_cube.get_mcube().get_Cube_Ammo();
+        const selected_cube_mesh = this.#selected_cube.get_VCube().get_Cube_mesh();
+        const selected_cube_Ammo = this.#selected_cube.get_MCube().get_Cube_Ammo();
         this.#robot.get_cgripper().get_vgripper().get_tcp().attach(selected_cube_mesh);
         //ur5tcp.attach(selected_cube_mesh);
         selected_cube_mesh.position.set(0,0,0);
@@ -91,8 +91,8 @@ export class CScene {
 
     release_object(){
         this.#object_collected = false;
-        const selected_cube_mesh = this.#selected_cube.get_vcube().get_Cube_mesh();
-        const selected_cube_Ammo = this.#selected_cube.get_mcube().get_Cube_Ammo();
+        const selected_cube_mesh = this.#selected_cube.get_VCube().get_Cube_mesh();
+        const selected_cube_Ammo = this.#selected_cube.get_MCube().get_Cube_Ammo();
         VScene.getInstance().get_scene().attach(selected_cube_mesh);
         selected_cube_Ammo.setCollisionFlags(selected_cube_Ammo.getCollisionFlags() & ~2); //Necessary otherwise strange behaviour when releasing
     }
@@ -159,7 +159,7 @@ export class CScene {
             mouse_position.y = ((event.clientY-rect.top)/rect.height)*-2 +1;
             raycaster.setFromCamera(mouse_position, VScene.getInstance().get_camera());
             if(!(this.#object_collected)) {
-                const intersections_with_cubes = raycaster.intersectObject(this.#selected_cube.get_vcube().get_Cube_mesh(), true);
+                const intersections_with_cubes = raycaster.intersectObject(this.#selected_cube.get_VCube().get_Cube_mesh(), true);
                 if (intersections_with_cubes.length === 0) 
                     return;
                 this.#executing_animation = true;
@@ -246,26 +246,26 @@ export class CScene {
         // How to step the physical simulation
         Ammo_environment.getInstance().get_World().stepSimulation(elapsed_Time,10);
         if (!this.#object_collected){
-            if (this.#selected_cube.get_vcube().get_Cube_mesh() && this.#selected_cube.get_mcube().get_Cube_Ammo()){
-                const motion_state = this.#selected_cube.get_mcube().get_Cube_Ammo().getMotionState();
+            if (this.#selected_cube.get_VCube().get_Cube_mesh() && this.#selected_cube.get_MCube().get_Cube_Ammo()){
+                const motion_state = this.#selected_cube.get_MCube().get_Cube_Ammo().getMotionState();
                 const Ammo_transformation = new Ammo.btTransform();
                 motion_state.getWorldTransform(Ammo_transformation);
         
                 const position = Ammo_transformation.getOrigin();
                 const orientation = Ammo_transformation.getRotation();
         
-                this.#selected_cube.get_vcube().get_Cube_mesh().position.set(position.x(),position.y(),position.z());
-                this.#selected_cube.get_vcube().get_Cube_mesh().quaternion.set(orientation.x(), orientation.y(), orientation.z(), orientation.w());
+                this.#selected_cube.get_VCube().get_Cube_mesh().position.set(position.x(),position.y(),position.z());
+                this.#selected_cube.get_VCube().get_Cube_mesh().quaternion.set(orientation.x(), orientation.y(), orientation.z(), orientation.w());
         
             }
             //syncronize_Ammo_to_mesh();
         }
         else {
-            if (this.#selected_cube.get_vcube().get_Cube_mesh() && this.#selected_cube.get_mcube().get_Cube_Ammo()){
+            if (this.#selected_cube.get_VCube().get_Cube_mesh() && this.#selected_cube.get_MCube().get_Cube_Ammo()){
                     const position = new THREE.Vector3();
                     const orientation = new THREE.Quaternion();
-                    this.#selected_cube.get_vcube().get_Cube_mesh().getWorldPosition(position);
-                    this.#selected_cube.get_vcube().get_Cube_mesh().getWorldQuaternion(orientation);
+                    this.#selected_cube.get_VCube().get_Cube_mesh().getWorldPosition(position);
+                    this.#selected_cube.get_VCube().get_Cube_mesh().getWorldQuaternion(orientation);
             
                     const Ammo_transformation = new Ammo.btTransform();
                     Ammo_transformation.setIdentity();
@@ -274,12 +274,12 @@ export class CScene {
                     Ammo_position.setValue(position.x,position.y,position.z);
             
                     Ammo_transformation.setRotation(new Ammo.btQuaternion(orientation.x,orientation.y,orientation.z,orientation.w));
-                    this.#selected_cube.get_mcube().get_Cube_Ammo().setWorldTransform(Ammo_transformation);
-                    const motion_state = this.#selected_cube.get_mcube().get_Cube_Ammo().getMotionState();
+                    this.#selected_cube.get_MCube().get_Cube_Ammo().setWorldTransform(Ammo_transformation);
+                    const motion_state = this.#selected_cube.get_MCube().get_Cube_Ammo().getMotionState();
             
                     
                     motion_state.setWorldTransform(Ammo_transformation);
-                    Ammo_environment.getInstance().get_World().updateSingleAabb(this.#selected_cube.get_mcube().get_Cube_Ammo());
+                    Ammo_environment.getInstance().get_World().updateSingleAabb(this.#selected_cube.get_MCube().get_Cube_Ammo());
             
                 }
             //syncronize_mesh_to_Ammo();

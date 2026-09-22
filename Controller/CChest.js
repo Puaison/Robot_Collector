@@ -1,7 +1,11 @@
 import { MChest } from "../Model/MChest";
 import { VChest } from "../View/VChest";
 import { VScene } from "../View/VScene";
-
+/**
+ * This class is the controller of a particular Chest object and it is responsible to add the Chest-mesh to the scene.
+ * 
+ * Responsibility: syncronizes the data (mesh and rigid body in Ammo env) of each cube placed in it and it is responsible to add the chest-mesh to the scene.
+ */
 export class CChest{
     #mchest = null;
     #vchest = null;
@@ -18,19 +22,19 @@ export class CChest{
         this.#mchest= new MChest(width_of_the_chest,depth_of_the_chest,height_of_the_chest,thickness_of_panels);
     }
 
-    get_vchest() {
+    get_VChest() {
         return this.#vchest;
     }
 
-    get_mchest() {
+    get_MChest() {
         return this.#mchest;
     }
 
-    get_Cubes(){
+    get_CCubes(){
         return this.#ccubes;
     }
 
-    add_Cube(CCube) {
+    add_CCube(CCube) {
         this.#ccubes.push(CCube);
         this.#vchest.add_Cube(CCube.get_vcube());
         this.#mchest.add_Cube(CCube.get_mcube());

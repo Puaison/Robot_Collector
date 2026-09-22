@@ -5,6 +5,11 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import URDFLoader from 'urdf-loader';
 import GUI from 'lil-gui';
 
+/**
+ * This class represents the scene in the Three.js environment with all its components. It uses the Singleton Pattern
+ * 
+ * Responsibility: It manages all the fundamental components for the correct visualization of the scene
+ */
 export class VScene{
     static #instance = null;
     #scene = null;

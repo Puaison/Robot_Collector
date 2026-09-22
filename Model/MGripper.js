@@ -6,9 +6,9 @@ import * as THREE from 'three';
  * Responsibility: it gathers informations necessary for managing and modelling the rigid bodies of contact sensors for a specific gripper in the Singleton Ammo physics world
  */
 export class MGripper{
-    /** @type {btRigidBody} This is the rigid body of the left finger contact sensor in the Singleton Ammo physics world. Used for detecting collisions */
+    /** @type {btRigidBody} This is the rigid body of the left finger contact sensor in the Singleton Ammo physics world. Used for detecting collisions. Only kinetic, not dynamic */
     #finger_contact_sensor_left_Ammo=null;
-    /** @type {btRigidBody} This is the rigid body of the right finger contact sensor in the Singleton Ammo physics world. Used for detecting collisions */
+    /** @type {btRigidBody} This is the rigid body of the right finger contact sensor in the Singleton Ammo physics world. Used for detecting collisions. Only kinetic, not dynamic */
     #finger_contact_sensor_right_Ammo=null;
 
     /** @type {Matrix4} This is the homogeneous transformation caused by the installation of the gripper on the robot that has to be applied to the end of the kinematic chain of the robot  */
@@ -18,7 +18,7 @@ export class MGripper{
     #last_gripper_value = 0.0;
 
     /**
-     * Given the paralleliped meshes used for representing the contact sensors, create the respective twins in the Ammo environment (only in kinematic mode)
+     * Given the paralleliped meshes used for representing the contact sensors, create the respective twins in the Ammo environment (Only kinetic, not dynamic)
      * @param {Mesh} finger_contact_sensor_left_mesh The parallelepiped mesh used to represent the left contact sensors in the Three.js environment
      * @param {Mesh} finger_contact_sensor_right_mesh The parallelepiped mesh used to represent the right contact sensors in the Three.js environment
      */
