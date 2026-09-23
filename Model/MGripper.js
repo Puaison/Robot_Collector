@@ -11,7 +11,7 @@ export class MGripper{
     /** @type {btRigidBody} This is the rigid body of the right finger contact sensor in the Singleton Ammo physics world. Used for detecting collisions. Only kinetic, not dynamic */
     #finger_contact_sensor_right_Ammo=null;
 
-    /** @type {Matrix4} This is the homogeneous transformation caused by the installation of the gripper on the robot that has to be applied to the end of the kinematic chain of the robot  */
+    /** @type {THREE.Matrix4} This is the homogeneous transformation caused by the installation of the gripper on the robot that has to be applied to the end of the kinematic chain of the robot  */
     #homogeneous_coordinates=null;
 
     /** @type {float} The current value of the joint that manages the closure of the gripper */
@@ -19,8 +19,8 @@ export class MGripper{
 
     /**
      * Given the paralleliped meshes used for representing the contact sensors, create the respective twins in the Ammo environment (Only kinetic, not dynamic)
-     * @param {Mesh} finger_contact_sensor_left_mesh The parallelepiped mesh used to represent the left contact sensors in the Three.js environment
-     * @param {Mesh} finger_contact_sensor_right_mesh The parallelepiped mesh used to represent the right contact sensors in the Three.js environment
+     * @param {THREE.Mesh} finger_contact_sensor_left_mesh The parallelepiped mesh used to represent the left contact sensors in the Three.js environment
+     * @param {THREE.Mesh} finger_contact_sensor_right_mesh The parallelepiped mesh used to represent the right contact sensors in the Three.js environment
      */
     constructor(finger_contact_sensor_left_mesh,finger_contact_sensor_right_mesh){
         this.#finger_contact_sensor_left_Ammo=this.create_physical_finger_contact_sensor(finger_contact_sensor_left_mesh);
@@ -39,7 +39,7 @@ export class MGripper{
     /**
      * Create the physical twin of the given Mesh in Ammo environment. It will not be moved by the other bodies in the Ammo environment after a collision or by the gravity.
      * It is moved kinematically by the movement of the robot in the Three.js environment and it is used for computing collisions with other bodies.  
-     * @param {Mesh} finger_contact_sensor_mesh 
+     * @param {THREE.Mesh} finger_contact_sensor_mesh 
      * @returns {btRigidBody}
      */
     create_physical_finger_contact_sensor(finger_contact_sensor_mesh) {

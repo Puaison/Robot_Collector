@@ -5,6 +5,7 @@ import {Ammo_environment} from './Ammo_environment';
  * Responsibility: it gathers informations necessary for managing and modelling the rigid body of a specific cube in the Singleton Ammo physics world
  */
 export class MCube {
+    /** @type {int} Identifier of the Cube*/
     #ID;
 
     #dimenions;

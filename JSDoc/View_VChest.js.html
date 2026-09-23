@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: View/VChest.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: View/VChest.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import * as THREE from 'three';
+/**
+ * This class represents the mesh chest in the Three.js environment that is a Three.js group which gathers. 
+ * 
+ * Responsibility: It models the group mesh of a specific chest; It also remebers which cubes are placed in it.
+ * 
+ * @see VCube
+ */
+export class VChest{
+    #width;
+    #height;
+    #depth;
+    #thickness;
+    /** @type {THREE.Mesh} Mesh of the Chest*/
+    #body_mesh = null;
+    /** @type {Array_of_VCube} Cubes in the chest */
+    #vcubes = [];
+
+    constructor(width_of_the_chest= 0.3,depth_of_the_chest= 0.3,height_of_the_chest= 0.2,thickness_of_panels= 0.005){
+        this.#body_mesh = new THREE.Group();
+        const paper_material = new THREE.MeshStandardMaterial({color: 0xBA8940});
+        
+        const bottom_panel_geometry = new THREE.BoxGeometry(width_of_the_chest,thickness_of_panels,depth_of_the_chest);
+        const bottom_panel = new THREE.Mesh(bottom_panel_geometry,paper_material);
+        bottom_panel.position.y = thickness_of_panels/2;
+        this.#body_mesh.add(bottom_panel);
+    
+        const lateral_panel_type_1_geometry = new THREE.BoxGeometry(width_of_the_chest,height_of_the_chest,thickness_of_panels);
+        const lateral_panel_type_2_geometry = new THREE.BoxGeometry(thickness_of_panels,height_of_the_chest,depth_of_the_chest);
+    
+        const lateral_panel_type_1_1_mesh =  new THREE.Mesh(lateral_panel_type_1_geometry,paper_material);
+        //lateral_panel_type_1_1_mesh.position.x= -width_of_the_chest/2;
+        lateral_panel_type_1_1_mesh.position.y= height_of_the_chest/2;
+        lateral_panel_type_1_1_mesh.position.z= -depth_of_the_chest/2;
+        //lateral_panel_type_1_1_mesh.rotation.y = Math.PI/2;
+        this.#body_mesh.add(lateral_panel_type_1_1_mesh);
+        
+        const lateral_panel_type_1_2_mesh =  new THREE.Mesh(lateral_panel_type_1_geometry,paper_material);
+        //lateral_panel_type_1_2_mesh.position.x= width_of_the_chest/2;
+        lateral_panel_type_1_2_mesh.position.y= height_of_the_chest/2;
+        lateral_panel_type_1_2_mesh.position.z= depth_of_the_chest/2;
+        //lateral_panel_type_1_2_mesh.rotation.y = Math.PI/2;
+        this.#body_mesh.add(lateral_panel_type_1_2_mesh);
+    
+        const lateral_panel_type_2_1_mesh =  new THREE.Mesh(lateral_panel_type_2_geometry,paper_material);
+        lateral_panel_type_2_1_mesh.position.x= -width_of_the_chest/2;
+        lateral_panel_type_2_1_mesh.position.y= height_of_the_chest/2;
+        //lateral_panel_type_2_1_mesh.position.z= -depth_of_the_chest/2;
+        //lateral_panel_type_2_1_mesh.rotation.y = Math.PI/2;
+        this.#body_mesh.add(lateral_panel_type_2_1_mesh);
+        
+        const lateral_panel_type_2_2_mesh =  new THREE.Mesh(lateral_panel_type_2_geometry,paper_material);
+        lateral_panel_type_2_2_mesh.position.x= width_of_the_chest/2;
+        lateral_panel_type_2_2_mesh.position.y= height_of_the_chest/2;
+        //lateral_panel_type_2_2_mesh.position.z= depth_of_the_chest/2; 
+        //lateral_panel_type_2_2_mesh.rotation.y = Math.PI/2;
+        this.#body_mesh.add(lateral_panel_type_2_2_mesh);
+    }
+
+    get_Chest_mesh(){
+        return this.#body_mesh;
+    }
+
+    get_VCubes(){
+        return this.#vcubes;
+    }
+
+    add_VCube(VCube){
+        this.#vcubes.push(VCube);
+    }
+
+}</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Ammo_environment.html">Ammo_environment</a></li><li><a href="CChest.html">CChest</a></li><li><a href="CCube.html">CCube</a></li><li><a href="CFloor.html">CFloor</a></li><li><a href="CGripper.html">CGripper</a></li><li><a href="CRobot.html">CRobot</a></li><li><a href="CScene.html">CScene</a></li><li><a href="MChest.html">MChest</a></li><li><a href="MCube.html">MCube</a></li><li><a href="MFloor.html">MFloor</a></li><li><a href="MGripper.html">MGripper</a></li><li><a href="MRobot.html">MRobot</a></li><li><a href="VChest.html">VChest</a></li><li><a href="VCube.html">VCube</a></li><li><a href="VFloor.html">VFloor</a></li><li><a href="VGripper.html">VGripper</a></li><li><a href="VRobot.html">VRobot</a></li><li><a href="VScene.html">VScene</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Wed Sep 23 2026 20:02:52 GMT+0200 (Ora legale dell’Europa centrale)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

@@ -5,11 +5,12 @@ import { MCube } from './MCube';
  * This class represents the floor in the Ammo environment. It is a Singleton class as only one floor can be present. 
  * 
  * Responsibility: it gathers informations necessary for managing and modelling the rigid body of the floor in the Singleton Ammo physics world. It also remebers which cubes are placed on it.
+ * @see MCube
  */
 export class MFloor{
     /** @type {MFloor} the singleton instance of this class */
     static #instance = null;
-    /** @type {Array of MCube} The collections of cubes that are on the floor*/
+    /** @type {Array_of_MCube} The collections of cubes that are on the floor*/
     #mcubes=[];
     /** @type {btRigidBody} This is the rigid body of the floor in the Singleton Ammo physics world, and contains all the physical informations (size,mass,inertia) */
     #floor_Ammo = null;
@@ -69,7 +70,7 @@ export class MFloor{
         this.#mcubes.splice(index,1);
     }
 
-    search_Cube(id){
+    search_MCube(id){
         for (const MCube of this.#mcubes) {
             if (MCube.get_ID() === id)
                 return MCube;

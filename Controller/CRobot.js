@@ -4,13 +4,19 @@ import { VRobot } from '../View/VRobot';
 import { VScene } from '../View/VScene';
 import { CGripper } from './CGripper';
 /**
- * This class is the controller of the robot. It assists the process of loading correctly the informations and syncronizing them between the View and Model Packages
+ * This class is the controller of the robot. It assists the process of loading correctly the informations and syncronizing them between the View and Model Packages.
  * 
  * Responsibility: It loads the gripper and syncronizes the data at the beginning. It contains all the data (used by CScene) for correctly managing the robot and the gripper between the Model and View Packages
+ * @see MRobot
+ * @see VRobot
+ * @see CGripper
  */
 export class CRobot{
+    /** @type {MRobot} The MRobot object managed by this controller */
     #mrobot=null;
+    /** @type {VRobot} The VRobot object managed by this controller */
     #vrobot=null;
+    /** @type {CGripper} The CGripper object managed by this controller */
     #cgripper=null; // From here we can access both vgripper and mgripper
     #cube_collected=null; //Maybe not necessary as managed by CScene
 

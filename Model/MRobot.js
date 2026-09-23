@@ -7,13 +7,15 @@ import { Matrix,inverse } from 'ml-matrix';
  * This class represents one robot with its direct and inverse kinematics algorithms and formulas.
  * 
  * Responsibility: It calculate the pose of the robot given the joints configuration or viceversa.
+ * 
+ * @see MGripper
  */
 export class MRobot{
-    /** @type {Matrix4} This is the initial homogeneous transformation caused by different conventions of the base frame, by the offset w.r.t the floor and by the rotation compensation for placing the base of the robot parallel to the floor  */
+    /** @type {THREE.Matrix4} This is the initial homogeneous transformation caused by different conventions of the base frame, by the offset w.r.t the floor and by the rotation compensation for placing the base of the robot parallel to the floor  */
     #base_transformations=null;
     /** @type {MGripper} Gripper mounted on the tool space of the robot  */
     #mgripper=null;
-    /** @type {Array of float} The current value of the joints of the robot */
+    /** @type {Array_of_float} The current value of the joints of the robot */
     #last_q_configuration = null;
     /**
      * Create the fixed base transformation

@@ -8,10 +8,15 @@ import { Ammo_environment } from "../Model/Ammo_environment";
  * This class is the controller of a particular Cube object and it is responsible to add the cube-mesh to the scene.
  * 
  * Responsibility: syncronizes the data, transformations and operations between the visual part (mesh) and the physical part of the same cube in the Ammo environment.
+ * @see MCube
+ * @see VCube
  */
 export class CCube{
+    /** @type {int} Identifier of the Cube*/
     #ID = null;
+    /** @type {VCube} The VCube object managed by this controller */
     #vcube = null;
+    /** @type {MCube} The MCube object managed by this controller */
     #mcube = null;
 
     constructor(id=1, dim=0.047, position=[0.5,0.03,0.5],quaternion=[-0.5,-0.5,-0.5,0.5]){

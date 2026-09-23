@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: View/VScene.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: View/VScene.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import * as THREE from 'three';
+import {block_Height} from '../javascript_files/config'
+import { LoadingManager } from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import URDFLoader from 'urdf-loader';
+import GUI from 'lil-gui';
+
+/**
+ * This class represents the scene in the Three.js environment with all its components. It uses the Singleton Pattern.
+ * 
+ * Responsibility: It manages all the fundamental components for the correct visualization of the scene
+ */
+export class VScene{
+    /** @type {VScene} Singleton Instance of this class */
+    static #instance = null;
+    /** @type {THREE.Scene} Three.js scene environment*/
+    #scene = null;
+    /** @type {THREE.PerspectiveCamera} Three.js camera */
+    #camera = null;
+    /** @type {THREE.WebGLRenderer} Three.js renderer */
+    #renderer = null;
+    /** @type {OrbitControls} camera controls */
+    #camera_controls = null;
+    constructor(){
+        // SCENE
+
+        this.#scene = new THREE.Scene();
+        this.#scene.background = new THREE.Color(0xC5A643);
+
+        // LIGHTS
+
+
+        const light1 = new THREE.DirectionalLight(0xffffff,2); //2 is the intensity of the light
+        const light2 = new THREE.DirectionalLight(0xffffff,2);
+        const light3 = new THREE.DirectionalLight(0xffffff,2);
+        const light4 = new THREE.DirectionalLight(0xffffff,2);
+        light1.position.set(-1, 1, -1);
+        light2.position.set(1, 1, -1);
+        light3.position.set(-1, 1, 1);
+        light4.position.set(1, 1, 1);
+        this.#scene.add(light1);
+        this.#scene.add(light2);
+        this.#scene.add(light3);
+        this.#scene.add(light4);
+
+
+        // CAMERA
+
+
+        this.#camera = new THREE.PerspectiveCamera(
+            45, //fov
+            window.innerWidth / window.innerHeight, //aspect
+            0.01, //near
+            500 //far
+        );
+        this.#camera.position.set(-0.5, 2.7, 1);
+        //this.#camera.lookAt(-5, -5, -5);
+
+
+
+        // // GUI
+        // const gui= new GUI();
+        // gui.add(this.#camera, 'fov', 1, 180).onChange(animate);
+
+
+
+        // RENDERER
+
+        this.#renderer = new THREE.WebGLRenderer(); //it will also create a canvas
+        this.#renderer.setSize(window.innerWidth, window.innerHeight); // define the size of the canvas
+        document.body.appendChild(this.#renderer.domElement); // add the canvas to the DOM
+
+        // Controls of the this.#camera
+        this.#camera_controls = new OrbitControls(this.#camera, this.#renderer.domElement);
+        this.#camera_controls.enablePan=true; //enable translation of the this.#camera
+        this.#camera_controls.minDistance = 0.1;
+        this.#camera_controls.maxDistance = 5;
+
+        // BLOCK where the robot is placed
+        const geometry_block = new THREE.BoxGeometry(0.15, block_Height, 0.15);
+        const material_block = new THREE.MeshStandardMaterial({ color: 0xC5AA4A });
+        const block = new THREE.Mesh(geometry_block, material_block);
+        block.position.set(0, block_Height/2, 0);
+        this.#scene.add(block);
+    }
+
+    static getInstance() {
+        if (VScene.#instance === null) {
+            VScene.#instance = new VScene();
+        }
+        return VScene.#instance;
+    }
+
+    add_mesh(mesh) {
+        this.#scene.add(mesh);
+    }
+
+    get_scene(){
+        return this.#scene;
+    }
+
+    get_renderer() {
+        return this.#renderer;
+    }
+
+    get_camera(){
+        return this.#camera;
+    }
+
+    get_camera_controls(){
+        return this.#camera_controls;
+    }
+}</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Ammo_environment.html">Ammo_environment</a></li><li><a href="CChest.html">CChest</a></li><li><a href="CCube.html">CCube</a></li><li><a href="CFloor.html">CFloor</a></li><li><a href="CGripper.html">CGripper</a></li><li><a href="CRobot.html">CRobot</a></li><li><a href="CScene.html">CScene</a></li><li><a href="MChest.html">MChest</a></li><li><a href="MCube.html">MCube</a></li><li><a href="MFloor.html">MFloor</a></li><li><a href="MGripper.html">MGripper</a></li><li><a href="MRobot.html">MRobot</a></li><li><a href="VChest.html">VChest</a></li><li><a href="VCube.html">VCube</a></li><li><a href="VFloor.html">VFloor</a></li><li><a href="VGripper.html">VGripper</a></li><li><a href="VRobot.html">VRobot</a></li><li><a href="VScene.html">VScene</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Wed Sep 23 2026 20:02:52 GMT+0200 (Ora legale dell’Europa centrale)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

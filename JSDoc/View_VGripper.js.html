@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: View/VGripper.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: View/VGripper.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import * as THREE from 'three';
+/**
+ * This class represents the mesh gripper in the Three.js environment with its two contact sensors.
+ * 
+ * Responsibility: It loads the URDF mesh of the Robotiq85 gripper. It adds also the contact sensor parallelepiped meshes to the fingers of the gripper-mesh and it also recovers informations from the Three.js scene like the tcp.
+ */
+export class VGripper {
+    /** @type {THREE.Mesh} Mesh of the contact sensor of the left finger of the gripper*/
+    #finger_contact_sensor_left_mesh=null;
+    /** @type {THREE.Mesh} Mesh of the contact sensor of the right finger of the gripper*/
+    #finger_sensor_right_mesh=null;
+    /** @type {THREE.Mesh} Mesh in the scene of the Tool Center Point of the gripper*/
+    #ur5tcp=null;
+    /** @type {THREE.Mesh} Mesh of the gripper*/
+    #ur5gripper=null;
+    /** @type {URDFLoader} Loader object that can be used to load URDF meshes*/
+    #loader = null;
+    /** @type {Float} The current value of the joint that manages the closure of the gripper */
+    #last_gripper_value = 0.0;
+
+    constructor(){
+
+    }
+    set_loader(loader){
+        this.#loader=loader;
+    }
+
+    /**
+     * Method that loads the URDF Mesh of the gripper
+     */
+    load_VGripper() {
+        return new Promise((resolve, reject) => {
+            this.#loader.load(
+                '/ur5/robotiq_85_gripper_simple.urdf',
+                gripper => {
+                    this.#ur5gripper = gripper;
+                    const finger_sensor_geometry = new THREE.BoxGeometry(0.038, 0.0156, 0.022);
+                    const finger_sensor_material = new THREE.MeshBasicMaterial({ color: 0xff0000, visible: false });
+                
+                    const finger_contact_sensor_left_mesh= new THREE.Mesh(finger_sensor_geometry, finger_sensor_material);
+                    finger_contact_sensor_left_mesh.position.set(0.025,0.0,0.0); //0.032
+                
+                    const finger_sensor_right_mesh = new THREE.Mesh(finger_sensor_geometry, finger_sensor_material);
+                    finger_sensor_right_mesh.position.set(0.025,0.0,0.0);
+                
+                    this.#ur5gripper.links["robotiq_85_left_finger_tip_link"].add(finger_contact_sensor_left_mesh);
+                    this.#ur5gripper.links["robotiq_85_right_finger_tip_link"].add(finger_sensor_right_mesh);
+    
+                    this.#finger_contact_sensor_left_mesh=finger_contact_sensor_left_mesh;
+                    this.#finger_sensor_right_mesh=finger_sensor_right_mesh;
+    
+                    this.#ur5tcp=this.#ur5gripper.links["dummy_center_indicator_link"];
+    
+                    // Mesh setup for the gripper
+                    gripper.position.set(0, 0.0, 0.137);
+                    gripper.rotation.y = -Math.PI/2;
+    
+                    //ur5robot.joints["wrist_3_joint"].add(gripper);
+                    resolve();
+                },
+                undefined,
+                reject
+            );
+        });
+    }
+    /**
+     * 
+     * @returns {THREE.Mesh} The mesh body in three.js that represents the Tool Center Point
+     */
+    get_tcp(){
+        return this.#ur5tcp;
+    }
+
+    get_finger_contact_sensor_left_mesh(){
+        return this.#finger_contact_sensor_left_mesh;
+    }
+
+    get_gripper_mesh(){
+        return this.#ur5gripper;
+    }
+
+    get_finger_sensor_right_mesh() {
+        return this.#finger_sensor_right_mesh;
+    }
+
+    get_last_gripper_value() {
+        return this.#last_gripper_value;
+    }
+
+    set_last_gripper_value(value) {
+        this.#last_gripper_value=value;
+    } 
+}</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Ammo_environment.html">Ammo_environment</a></li><li><a href="CChest.html">CChest</a></li><li><a href="CCube.html">CCube</a></li><li><a href="CFloor.html">CFloor</a></li><li><a href="CGripper.html">CGripper</a></li><li><a href="CRobot.html">CRobot</a></li><li><a href="CScene.html">CScene</a></li><li><a href="MChest.html">MChest</a></li><li><a href="MCube.html">MCube</a></li><li><a href="MFloor.html">MFloor</a></li><li><a href="MGripper.html">MGripper</a></li><li><a href="MRobot.html">MRobot</a></li><li><a href="VChest.html">VChest</a></li><li><a href="VCube.html">VCube</a></li><li><a href="VFloor.html">VFloor</a></li><li><a href="VGripper.html">VGripper</a></li><li><a href="VRobot.html">VRobot</a></li><li><a href="VScene.html">VScene</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Wed Sep 23 2026 20:02:52 GMT+0200 (Ora legale dell’Europa centrale)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

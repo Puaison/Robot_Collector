@@ -4,11 +4,13 @@ import { VScene } from "../View/VScene";
 /**
  * This class is the controller of the floor object.
  * 
- * Responsibility: syncronizes the data (mesh and rigid body in Ammo env) of each cube placed on it and it is responsible to add the floor-mesh to the scene. 
+ * Responsibility: syncronizes the data (mesh and rigid body in Ammo env) of each cube placed on it and it is responsible to add the floor-mesh to the scene.
+ * @see CCube
  */
 export class CFloor {
+    /** @type {CFloor} Singleton Instance of this class */
     static #instance = null;
-
+    /** @type {Array_of_CCube} The collections of cubes that are on the floor*/
     #ccubes=[];
     /**
      * Adds the mesh floor to the scene

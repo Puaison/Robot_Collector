@@ -4,12 +4,16 @@ import { VScene } from "../View/VScene";
 import { Ammo_environment } from "../Model/Ammo_environment";
 import * as THREE from 'three';
 /**
- * This class is the controller of the gripper. It assists the process of loading correctly the informations and syncronizing them between the View and Model Packages
+ * This class is the controller of the gripper. It assists the process of loading correctly the informations and syncronizing them between the View and Model Packages.
  * 
  * Responsibility: syncronizes the data and position/orientation from the visual contact sensors (meshes) to the physical kinetic bodies in the Ammo environment.
+ * @see MGripper
+ * @see VGripper
  */
 export class CGripper{
+    /** @type {MGripper} The MGripper object managed by this controller */
     #mgripper=null;
+    /** @type {VGripper} The VGripper object managed by this controller */
     #vgripper=null;
     constructor(){
 

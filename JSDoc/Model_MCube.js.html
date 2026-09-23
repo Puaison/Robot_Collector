@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: Model/MCube.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: Model/MCube.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import {Ammo_environment} from './Ammo_environment';
+/**
+ * This class represents one cube in the Ammo environment that can be collected by the robot.
+ * 
+ * Responsibility: it gathers informations necessary for managing and modelling the rigid body of a specific cube in the Singleton Ammo physics world
+ */
+export class MCube {
+    /** @type {int} Identifier of the Cube*/
+    #ID;
+
+    #dimenions;
+    
+    /** @type {btRigidBody} This is the rigid body of the cube in the Singleton Ammo physics world, and contains all the physical informations about the cube (size,mass,inertia) */
+    #body_Ammo=null;
+
+    /**
+     * Create the cube in the Singleton Ammo physics world
+     * @param {int} id Identifier assigned to the specific cube
+     * @param {float} dim Geometric dimensions
+     * @param {Float32Array} position Array with x,y,z coordinates of the center of the cube
+     * @param {Float32Array} quaternion Array with x,y,z,w quaternion of the cube
+     */
+    constructor(id=1, dim, position=[0.5,0.03,0.5],quaternion=[-0.5,-0.5,-0.5,0.5]){
+        this.#ID=id;
+        this.#dimenions=dim;
+
+        const ammo_environment = Ammo_environment.getInstance();
+        const Ammo = ammo_environment.get_Ammo();
+
+        const collectable_object_shape_Ammo = new Ammo.btBoxShape(new Ammo.btVector3(dim/2, dim/2, dim/2));
+        const initial_transformation = new Ammo.btTransform();
+        initial_transformation.setIdentity();
+        initial_transformation.setOrigin(new Ammo.btVector3(position[0], position[1], position[2]));
+
+        initial_transformation.setRotation(new Ammo.btQuaternion(quaternion[0],quaternion[1],quaternion[2],quaternion[3]));
+        const initial_state_Ammo= new Ammo.btDefaultMotionState(initial_transformation);
+        const collectable_object_inertia_Ammo=new Ammo.btVector3(0, 0, 0);
+        collectable_object_shape_Ammo.calculateLocalInertia(1,collectable_object_inertia_Ammo);
+        const info_rigid_body_Ammo = new Ammo.btRigidBodyConstructionInfo(
+            1, //mass
+            initial_state_Ammo,
+            collectable_object_shape_Ammo,
+            collectable_object_inertia_Ammo
+        );
+        this.#body_Ammo = new Ammo.btRigidBody(info_rigid_body_Ammo);
+        this.#body_Ammo.setUserIndex(id);
+        this.#body_Ammo.setActivationState(4); //otherwise after sometime Ammo will deactivate it
+        Ammo_environment.getInstance().get_World().addRigidBody(this.#body_Ammo);
+    }
+
+    get_position(){
+
+        const ammo_environment = Ammo_environment.getInstance();
+        const Ammo = ammo_environment.get_Ammo();
+        const motion_state = this.#body_Ammo.getMotionState();
+        const Ammo_transformation = new Ammo.btTransform();
+        motion_state.getWorldTransform(Ammo_transformation);
+        return Ammo_transformation.getOrigin();
+    }
+
+    get_quaternion(){
+        const ammo_environment = Ammo_environment.getInstance();
+        const Ammo = ammo_environment.get_Ammo();
+        const motion_state = this.#body_Ammo.getMotionState();
+        const Ammo_transformation = new Ammo.btTransform();
+        motion_state.getWorldTransform(Ammo_transformation);
+        return Ammo_transformation.getRotation();
+    }
+
+    set_pose(position,orientation){
+        const ammo_environment = Ammo_environment.getInstance();
+        const Ammo = ammo_environment.get_Ammo();
+        const Ammo_transformation = new Ammo.btTransform();
+        Ammo_transformation.setIdentity();
+
+        const Ammo_position = Ammo_transformation.getOrigin();
+        Ammo_position.setValue(position.x,position.y,position.z);
+
+        Ammo_transformation.setRotation(new Ammo.btQuaternion(orientation.x,orientation.y,orientation.z,orientation.w));
+        this.#body_Ammo.setWorldTransform(Ammo_transformation);
+        const motion_state = this.#body_Ammo.getMotionState();
+        
+        motion_state.setWorldTransform(Ammo_transformation);
+        Ammo_environment.getInstance().get_World().updateSingleAabb(this.#body_Ammo);
+    }
+
+    get_ID() {
+        return this.#ID;
+    }
+    /**
+     * Get the rigid body of this spefic cube in the Singleton Ammo physics world
+     * @returns {btRigidBody} the cube in the Singleton Ammo physics world
+     */
+    get_Cube_Ammo() {
+        return this.#body_Ammo;
+    }
+
+    deactivate(){
+        this.#body_Ammo.setActivationState(5);
+    }
+}</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Ammo_environment.html">Ammo_environment</a></li><li><a href="CChest.html">CChest</a></li><li><a href="CCube.html">CCube</a></li><li><a href="CFloor.html">CFloor</a></li><li><a href="CGripper.html">CGripper</a></li><li><a href="CRobot.html">CRobot</a></li><li><a href="CScene.html">CScene</a></li><li><a href="MChest.html">MChest</a></li><li><a href="MCube.html">MCube</a></li><li><a href="MFloor.html">MFloor</a></li><li><a href="MGripper.html">MGripper</a></li><li><a href="MRobot.html">MRobot</a></li><li><a href="VChest.html">VChest</a></li><li><a href="VCube.html">VCube</a></li><li><a href="VFloor.html">VFloor</a></li><li><a href="VGripper.html">VGripper</a></li><li><a href="VRobot.html">VRobot</a></li><li><a href="VScene.html">VScene</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Wed Sep 23 2026 20:02:52 GMT+0200 (Ora legale dell’Europa centrale)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
