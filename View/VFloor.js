@@ -4,12 +4,14 @@ import * as THREE from 'three';
  * This class represents the mesh floor in the Three.js environment. It is a Singleton class as only one floor can be present.
  * 
  * Responsibility: It models the mesh of the floor. It also remebers which cubes are placed on it.
+ * @see VCube
  */
 export class VFloor{
+    /** @type {VFloor} Singleton Instance of this class */
     static #instance = null;
-
+    /** @type {Array_of_VCube} Cubes on the floor */
     #vcubes=[];
-
+    /** @type {THREE.Mesh} Mesh of the Floor*/
     #floor_mesh = null;
 
     constructor() {

@@ -1,11 +1,21 @@
 import * as THREE from 'three';
-
+/**
+ * This class represents the mesh gripper in the Three.js environment with its two contact sensors.
+ * 
+ * Responsibility: It loads the URDF mesh of the Robotiq85 gripper. It adds also the contact sensor parallelepiped meshes to the fingers of the gripper-mesh and it also recovers informations from the Three.js scene like the tcp.
+ */
 export class VGripper {
-    #finger_sensor_left_mesh=null;
+    /** @type {THREE.Mesh} Mesh of the contact sensor of the left finger of the gripper*/
+    #finger_contact_sensor_left_mesh=null;
+    /** @type {THREE.Mesh} Mesh of the contact sensor of the right finger of the gripper*/
     #finger_sensor_right_mesh=null;
+    /** @type {THREE.Mesh} Mesh in the scene of the Tool Center Point of the gripper*/
     #ur5tcp=null;
+    /** @type {THREE.Mesh} Mesh of the gripper*/
     #ur5gripper=null;
+    /** @type {URDFLoader} Loader object that can be used to load URDF meshes*/
     #loader = null;
+    /** @type {Float} The current value of the joint that manages the closure of the gripper */
     #last_gripper_value = 0.0;
 
     constructor(){
@@ -15,7 +25,10 @@ export class VGripper {
         this.#loader=loader;
     }
 
-    load_Gripper() {
+    /**
+     * Method that loads the URDF Mesh of the gripper
+     */
+    load_VGripper() {
         return new Promise((resolve, reject) => {
             this.#loader.load(
                 '/ur5/robotiq_85_gripper_simple.urdf',
@@ -24,16 +37,16 @@ export class VGripper {
                     const finger_sensor_geometry = new THREE.BoxGeometry(0.038, 0.0156, 0.022);
                     const finger_sensor_material = new THREE.MeshBasicMaterial({ color: 0xff0000, visible: false });
                 
-                    const finger_sensor_left_mesh= new THREE.Mesh(finger_sensor_geometry, finger_sensor_material);
-                    finger_sensor_left_mesh.position.set(0.025,0.0,0.0); //0.032
+                    const finger_contact_sensor_left_mesh= new THREE.Mesh(finger_sensor_geometry, finger_sensor_material);
+                    finger_contact_sensor_left_mesh.position.set(0.025,0.0,0.0); //0.032
                 
                     const finger_sensor_right_mesh = new THREE.Mesh(finger_sensor_geometry, finger_sensor_material);
                     finger_sensor_right_mesh.position.set(0.025,0.0,0.0);
                 
-                    this.#ur5gripper.links["robotiq_85_left_finger_tip_link"].add(finger_sensor_left_mesh);
+                    this.#ur5gripper.links["robotiq_85_left_finger_tip_link"].add(finger_contact_sensor_left_mesh);
                     this.#ur5gripper.links["robotiq_85_right_finger_tip_link"].add(finger_sensor_right_mesh);
     
-                    this.#finger_sensor_left_mesh=finger_sensor_left_mesh;
+                    this.#finger_contact_sensor_left_mesh=finger_contact_sensor_left_mesh;
                     this.#finger_sensor_right_mesh=finger_sensor_right_mesh;
     
                     this.#ur5tcp=this.#ur5gripper.links["dummy_center_indicator_link"];
@@ -50,13 +63,16 @@ export class VGripper {
             );
         });
     }
-
+    /**
+     * 
+     * @returns {THREE.Mesh} The mesh body in three.js that represents the Tool Center Point
+     */
     get_tcp(){
         return this.#ur5tcp;
     }
 
-    get_finger_sensor_left_mesh(){
-        return this.#finger_sensor_left_mesh;
+    get_finger_contact_sensor_left_mesh(){
+        return this.#finger_contact_sensor_left_mesh;
     }
 
     get_gripper_mesh(){

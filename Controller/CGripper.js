@@ -3,7 +3,11 @@ import { VGripper } from "../View/VGripper";
 import { VScene } from "../View/VScene";
 import { Ammo_environment } from "../Model/Ammo_environment";
 import * as THREE from 'three';
-
+/**
+ * This class is the controller of the gripper. It assists the process of loading correctly the informations and syncronizing them between the View and Model Packages
+ * 
+ * Responsibility: syncronizes the data and position/orientation from the visual contact sensors (meshes) to the physical kinetic bodies in the Ammo environment.
+ */
 export class CGripper{
     #mgripper=null;
     #vgripper=null;
@@ -11,22 +15,31 @@ export class CGripper{
 
     }
 
+    /**
+     * Method that loads the URDF Mesh of the gripper and that syncronizes the contact sensors from the View to the Model Package
+     * @param {URDFLoader} loader object that needs to be used to load the URDF mesh
+     */
+
     async load_CGripper(loader) {
         this.#vgripper= new VGripper()
         this.#vgripper.set_loader(loader);
-        await this.#vgripper.load_Gripper();
+        await this.#vgripper.load_VGripper();
         //VScene.getInstance().add_mesh(this.#vgripper.get_gripper_mesh());
-        this.#mgripper= new MGripper(this.#vgripper.get_finger_sensor_left_mesh(),this.#vgripper.get_finger_sensor_right_mesh());
+        this.#mgripper= new MGripper(this.#vgripper.get_finger_contact_sensor_left_mesh(),this.#vgripper.get_finger_sensor_right_mesh());
     }
 
-    get_vgripper(){
+    get_VGripper(){
         return this.#vgripper;
     }
 
-    get_mgripper(){
+    get_MGripper(){
         return this.#mgripper;
     }
 
+    /**
+     * Takes the info from the meshes of the contact sensors and copies them to the parallelepiped twins in the Ammo env 
+     * The bodies of the contact sensors are only kinetic in the Ammo env
+     */
     syncronize_finger_mesh_to_Ammo(){
 
         const ammo_environment = Ammo_environment.getInstance();
@@ -34,8 +47,8 @@ export class CGripper{
         //LEFT FINGER
         const left_position_mesh = new THREE.Vector3();
         const left_quaternion_mesh = new THREE.Quaternion();
-        this.#vgripper.get_finger_sensor_left_mesh().getWorldPosition(left_position_mesh);
-        this.#vgripper.get_finger_sensor_left_mesh().getWorldQuaternion(left_quaternion_mesh);
+        this.#vgripper.get_finger_contact_sensor_left_mesh().getWorldPosition(left_position_mesh);
+        this.#vgripper.get_finger_contact_sensor_left_mesh().getWorldQuaternion(left_quaternion_mesh);
     
         const left_current_transformation = new Ammo.btTransform();
         left_current_transformation.setIdentity();

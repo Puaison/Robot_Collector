@@ -6,15 +6,20 @@ import URDFLoader from 'urdf-loader';
 import GUI from 'lil-gui';
 
 /**
- * This class represents the scene in the Three.js environment with all its components. It uses the Singleton Pattern
+ * This class represents the scene in the Three.js environment with all its components. It uses the Singleton Pattern.
  * 
  * Responsibility: It manages all the fundamental components for the correct visualization of the scene
  */
 export class VScene{
+    /** @type {VScene} Singleton Instance of this class */
     static #instance = null;
+    /** @type {THREE.Scene} Three.js scene environment*/
     #scene = null;
+    /** @type {THREE.PerspectiveCamera} Three.js camera */
     #camera = null;
+    /** @type {THREE.WebGLRenderer} Three.js renderer */
     #renderer = null;
+    /** @type {OrbitControls} camera controls */
     #camera_controls = null;
     constructor(){
         // SCENE

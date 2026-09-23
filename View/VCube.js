@@ -5,11 +5,12 @@ import * as THREE from 'three';
  * Responsibility: It models the mesh of a specific cube and recovers informations like position and orientation from the mesh in the scene.
  */
 export class VCube{
+    /** @type {int} Identifier of the Cube*/
     #ID;
-
+    /** @type {float} Dimension of the cube */
     #dimenions;
 
-    //This is the body of the cube in the three.js environment and represents its mesh.
+    /** @type {THREE.Mesh} This is the body of the cube in the three.js environment and represents its mesh.*/
     #body_mesh=null;
 
     constructor(id=1, dim=0.047, position=[0.5,0.03,0.5],quaternion=[-0.5,-0.5,-0.5,0.5]){

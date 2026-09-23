@@ -1,17 +1,19 @@
 import * as THREE from 'three';
 /**
- * This class represents the mesh chest in the Three.js environment that is a Three.js group which gathers  
+ * This class represents the mesh chest in the Three.js environment that is a Three.js group which gathers. 
  * 
  * Responsibility: It models the group mesh of a specific chest; It also remebers which cubes are placed in it.
+ * 
+ * @see VCube
  */
 export class VChest{
     #width;
     #height;
     #depth;
     #thickness;
-
+    /** @type {THREE.Mesh} Mesh of the Chest*/
     #body_mesh = null;
-
+    /** @type {Array_of_VCube} Cubes in the chest */
     #vcubes = [];
 
     constructor(width_of_the_chest= 0.3,depth_of_the_chest= 0.3,height_of_the_chest= 0.2,thickness_of_panels= 0.005){

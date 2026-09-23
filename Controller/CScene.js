@@ -9,6 +9,11 @@ import * as TWEEN from '@tweenjs/tween.js';
 import * as THREE from 'three';
 import { CFloor } from "./CFloor";
 
+/**
+ * This class is the controller of the whole Scene both in the Three.js and Ammo environment. It uses the Singleton Pattern
+ * 
+ * Responsibility:
+ */
 export class CScene {
     static #instance = null;
     #cchests=[];
@@ -82,7 +87,7 @@ export class CScene {
         this.#object_collected = true;
         const selected_cube_mesh = this.#selected_cube.get_VCube().get_Cube_mesh();
         const selected_cube_Ammo = this.#selected_cube.get_MCube().get_Cube_Ammo();
-        this.#robot.get_cgripper().get_vgripper().get_tcp().attach(selected_cube_mesh);
+        this.#robot.get_CGripper().get_VGripper().get_tcp().attach(selected_cube_mesh);
         //ur5tcp.attach(selected_cube_mesh);
         selected_cube_mesh.position.set(0,0,0);
         selected_cube_mesh.quaternion.identity();
@@ -114,9 +119,9 @@ export class CScene {
                         q[5]
                     ];
                     const current_q = temp_q.map(angle => normalize_Angle(angle));
-                    this.#robot.get_vrobot().update_Threejs_Robot_Joints(current_q);
+                    this.#robot.get_VRobot().update_Threejs_Robot_Joints(current_q);
                 })
-                .onComplete(() => {this.#robot.get_vrobot().set_last_q_configuration(target); this.#robot.get_mrobot().set_last_q_configuration(target); resolve();}) //Function called at the end of the animation
+                .onComplete(() => {this.#robot.get_VRobot().set_last_q_configuration(target); this.#robot.get_MRobot().set_last_q_configuration(target); resolve();}) //Function called at the end of the animation
                 .start(); //Let start the planned Tween
         });
     }
@@ -138,10 +143,10 @@ export class CScene {
                         console.log("Release object");
                         this.release_object();
                     }
-                    this.#robot.get_cgripper().get_vgripper().get_gripper_mesh().setJointValue('robotiq_85_left_knuckle_joint', current_value[0]);
+                    this.#robot.get_CGripper().get_VGripper().get_gripper_mesh().setJointValue('robotiq_85_left_knuckle_joint', current_value[0]);
                     //robotiq_85_gripper.setJointValue('robotiq_85_left_knuckle_joint', current_value[0]);
-                    this.#robot.get_cgripper().get_vgripper().set_last_gripper_value(current_value[0]);
-                    this.#robot.get_cgripper().get_mgripper().set_last_gripper_value(current_value[0]);
+                    this.#robot.get_CGripper().get_VGripper().set_last_gripper_value(current_value[0]);
+                    this.#robot.get_CGripper().get_MGripper().set_last_gripper_value(current_value[0]);
                 })
                 .onComplete(() => {resolve();}) //Function called at the end of the animation
                 .start(); //Let start the planned Tween
@@ -199,31 +204,31 @@ export class CScene {
     }
 
     async collect_animation(id, center_cube_position, cube_orientation) {
-        const last_q_configuration = this.#robot.get_mrobot().get_last_q_configuration();
+        const last_q_configuration = this.#robot.get_MRobot().get_last_q_configuration();
         const mid_pose = [center_cube_position.x,center_cube_position.y + 0.2,center_cube_position.z,cube_orientation.x,cube_orientation.y,cube_orientation.z];
-        let temp_q = this.#robot.get_mrobot().inverse_Kinematics(mid_pose,this.#robot.get_mrobot().get_last_q_configuration(),max_iterations, epsilon_position, epislon_orientation);
+        let temp_q = this.#robot.get_MRobot().inverse_Kinematics(mid_pose,this.#robot.get_MRobot().get_last_q_configuration(),max_iterations, epsilon_position, epislon_orientation);
         //let temp_q =inverse_Kinematics(mid_pose,last_q_configuration,max_iterations, epsilon_position, epislon_orientation);
         const mid_q = temp_q.map(angle => normalize_Angle(angle));
-        await this.move_Threejs_Robot(this.#robot.get_vrobot().get_last_q_configuration(),mid_q,1000);
+        await this.move_Threejs_Robot(this.#robot.get_VRobot().get_last_q_configuration(),mid_q,1000);
         const final_pose = [center_cube_position.x,center_cube_position.y,center_cube_position.z,cube_orientation.x,cube_orientation.y,cube_orientation.z];
-        temp_q = this.#robot.get_mrobot().inverse_Kinematics(final_pose,this.#robot.get_mrobot().get_last_q_configuration(),max_iterations, epsilon_position, epislon_orientation);
-        //temp_q=inverse_Kinematics(final_pose,this.#robot.get_mrobot().get_last_q_configuration(),max_iterations, epsilon_position, epislon_orientation);
+        temp_q = this.#robot.get_MRobot().inverse_Kinematics(final_pose,this.#robot.get_MRobot().get_last_q_configuration(),max_iterations, epsilon_position, epislon_orientation);
+        //temp_q=inverse_Kinematics(final_pose,this.#robot.get_MRobot().get_last_q_configuration(),max_iterations, epsilon_position, epislon_orientation);
         const final_q=temp_q.map(angle => normalize_Angle(angle));
-        await this.move_Threejs_Robot(this.#robot.get_vrobot().get_last_q_configuration(),final_q,1000);
-        await this.open_close_Threejs_Gripper(this.#robot.get_cgripper().get_vgripper().get_last_gripper_value(),0.6,1000);
-        await this.move_Threejs_Robot(this.#robot.get_vrobot().get_last_q_configuration(),rest_q,1000);
+        await this.move_Threejs_Robot(this.#robot.get_VRobot().get_last_q_configuration(),final_q,1000);
+        await this.open_close_Threejs_Gripper(this.#robot.get_CGripper().get_VGripper().get_last_gripper_value(),0.6,1000);
+        await this.move_Threejs_Robot(this.#robot.get_VRobot().get_last_q_configuration(),rest_q,1000);
         this.#executing_animation = false;
     }
 
     async release_animation(center_chest_position, chest_orientation){
         const move_pose = [center_chest_position.x,center_chest_position.y+0.55,center_chest_position.z,chest_orientation[0],chest_orientation[1],chest_orientation[2]];
         //const move_pose = [-0.85,0.55,0.0,-Math.PI/2,0.0,-Math.PI/2];
-        let temp_q = this.#robot.get_mrobot().inverse_Kinematics(move_pose,this.#robot.get_mrobot().get_last_q_configuration(),max_iterations, epsilon_position, epislon_orientation);
+        let temp_q = this.#robot.get_MRobot().inverse_Kinematics(move_pose,this.#robot.get_MRobot().get_last_q_configuration(),max_iterations, epsilon_position, epislon_orientation);
         //let temp_q=inverse_Kinematics(move_pose,last_q_configuration,max_iterations+5000, epsilon_position, epislon_orientation);
         const move_q=temp_q.map(angle => normalize_Angle(angle));
-        await this.move_Threejs_Robot(this.#robot.get_vrobot().get_last_q_configuration(),move_q,1000);
-        await this.open_close_Threejs_Gripper(this.#robot.get_cgripper().get_vgripper().get_last_gripper_value(),0.0,2000);
-        await this.move_Threejs_Robot(this.#robot.get_vrobot().get_last_q_configuration(),rest_q,1000);
+        await this.move_Threejs_Robot(this.#robot.get_VRobot().get_last_q_configuration(),move_q,1000);
+        await this.open_close_Threejs_Gripper(this.#robot.get_CGripper().get_VGripper().get_last_gripper_value(),0.0,2000);
+        await this.move_Threejs_Robot(this.#robot.get_VRobot().get_last_q_configuration(),rest_q,1000);
         this.#executing_animation = false;
     
     }
@@ -238,8 +243,8 @@ export class CScene {
         VScene.getInstance().get_camera().updateProjectionMatrix();
         VScene.getInstance().get_camera_controls().update();
         this.#My_TWEEN.update(time);
-        if (this.#robot.get_cgripper().get_mgripper().get_finger_contact_sensor_left_Ammo() && this.#robot.get_cgripper().get_mgripper().get_finger_contact_sensor_right_Ammo()) { //skip this if the finger sensors are not already created
-            this.#robot.get_cgripper().syncronize_finger_mesh_to_Ammo();
+        if (this.#robot.get_CGripper().get_MGripper().get_finger_contact_sensor_left_Ammo() && this.#robot.get_CGripper().get_MGripper().get_finger_contact_sensor_right_Ammo()) { //skip this if the finger sensors are not already created
+            this.#robot.get_CGripper().syncronize_finger_mesh_to_Ammo();
         }
         this.#timer.update();
         const elapsed_Time = this.#timer.getDelta();

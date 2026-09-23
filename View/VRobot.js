@@ -1,12 +1,20 @@
 import { LoadingManager } from 'three';
 import URDFLoader from 'urdf-loader';
 import { rest_q,block_Height } from '../javascript_files/config';
+/**
+ * This class represents the mesh robot in the Three.js environment.
+ * 
+ * Responsibility: It loads the URDF mesh of the UR5 robot.
+ */
 export class VRobot {
     //#vgripper = null;
-
+    /** @type {URDFLoader} Loader object that can be used to load URDF meshes*/
     #loader = null;
+    /** @type {THREE.Mesh} Mesh of the robot*/
     #ur5robot = null;
+    /** @type {Array_of_Float} The current value of the joints of the robot */
     #last_q_configuration = null;
+    /** @type {Float} The distance of the base's center of the robot from floor */
     #offset=0;
     
     constructor(offset = block_Height) {
@@ -63,7 +71,10 @@ export class VRobot {
     get_loader(){
         return this.#loader;
     }
-
+    /**
+     * This method changes the value of the joints directly in the mesh
+     * @param {Array_of_Float} q The joints' values
+     */
     update_Threejs_Robot_Joints(q) {
         this.#ur5robot.setJointValue('shoulder_pan_joint', q[0]); //this rotate the base
         this.#ur5robot.setJointValue('shoulder_lift_joint', q[1]); // this make the robot up
