@@ -4,7 +4,7 @@ import { CRobot } from "./CRobot";
 import { Ammo_environment } from "../Model/Ammo_environment";
 import { VScene } from "../View/VScene";
 import { normalize_angle_enhanced, shortest_angle_difference } from "../javascript_files/utils";
-import { rest_q,max_iterations,epsilon_position,epislon_orientation } from "../javascript_files/config";
+import { max_iterations,epsilon_position,epislon_orientation } from "../javascript_files/config";
 import * as TWEEN from '@tweenjs/tween.js';
 import * as THREE from 'three';
 import { CFloor } from "./CFloor";
@@ -278,7 +278,7 @@ export class CScene {
         const final_q=temp_q.map(angle => normalize_angle_enhanced(angle));
         await this.move_Threejs_Robot(this.#robot.get_VRobot().get_last_q_configuration(),final_q,1000);
         await this.open_close_Threejs_Gripper(this.#robot.get_CGripper().get_VGripper().get_last_gripper_value(),0.6,1000);
-        await this.move_Threejs_Robot(this.#robot.get_VRobot().get_last_q_configuration(),rest_q,1000);
+        await this.move_Threejs_Robot(this.#robot.get_VRobot().get_last_q_configuration(),this.#robot.get_rest_q(),1000);
         this.#executing_animation = false;
     }
 
@@ -289,7 +289,7 @@ export class CScene {
         const move_q=temp_q.map(angle => normalize_angle_enhanced(angle));
         await this.move_Threejs_Robot(this.#robot.get_VRobot().get_last_q_configuration(),move_q,1000);
         await this.open_close_Threejs_Gripper(this.#robot.get_CGripper().get_VGripper().get_last_gripper_value(),0.0,2000);
-        await this.move_Threejs_Robot(this.#robot.get_VRobot().get_last_q_configuration(),rest_q,1000);
+        await this.move_Threejs_Robot(this.#robot.get_VRobot().get_last_q_configuration(),this.#robot.get_rest_q(),1000);
         this.#executing_animation = false;
     
     }

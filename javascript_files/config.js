@@ -52,9 +52,9 @@ export const epislon_orientation = 1e-2;
 export const max_iterations = 100;
 
 // calculate rest pose
-const rest_pose = [0.1,1.52,0.1,0,0,Math.PI/2];
-const temp_rest_q =inverse_Kinematics(rest_pose,robot_initial_joints_values,max_iterations, epsilon_position, epislon_orientation);
-export const rest_q = temp_rest_q.map(angle => normalize_angle_enhanced(angle));
+export const rest_pose = [0.1,1.52,0.1,0,0,Math.PI/2];
+// const temp_rest_q =inverse_Kinematics(rest_pose,robot_initial_joints_values,max_iterations, epsilon_position, epislon_orientation);
+// export const rest_q = temp_rest_q.map(angle => normalize_angle_enhanced(angle));
 
 // Floor setup
 export const floor_rows = 20;

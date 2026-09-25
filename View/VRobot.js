@@ -1,6 +1,6 @@
 import { LoadingManager } from 'three';
 import URDFLoader from 'urdf-loader';
-import { rest_q,block_Height } from '../javascript_files/config';
+import { block_Height } from '../javascript_files/config';
 /**
  * This class represents the mesh robot in the Three.js environment.
  * 
@@ -53,8 +53,7 @@ export class VRobot {
                 robot => {
                     this.#ur5robot = robot;
                     //scene.add(robot);
-                    this.update_Threejs_Robot_Joints(rest_q);
-                    this.#last_q_configuration = rest_q;
+                    this.update_Threejs_Robot_Joints(this.#last_q_configuration);
     
                     // Rotatation of the mesh in order to stand on the floor
                     robot.rotation.x = -Math.PI/2;
