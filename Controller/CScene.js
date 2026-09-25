@@ -8,6 +8,7 @@ import { rest_q,max_iterations,epsilon_position,epislon_orientation } from "../j
 import * as TWEEN from '@tweenjs/tween.js';
 import * as THREE from 'three';
 import { CFloor } from "./CFloor";
+import { VFloor } from "../View/VFloor";
 
 /**
  * This class is the controller of the whole Scene both in the Three.js and Ammo environment. It uses the Singleton Pattern
@@ -22,23 +23,23 @@ export class CScene {
     #object_collected=false;
     #executing_animation=false;
     #selected_cube=null;
+    #selected_chest=null;
     #My_TWEEN=null;
     #timer=null;
     constructor() {
-        //Create the two chests
-        const cchest_1= new CChest([0.75,0,0]);
+        //#region First Chest
+        const cchest_1= new CChest(1,[0.75,0,0]);
         this.#cchests_array.push(cchest_1);
         this.#vchests_array.push(cchest_1.get_VChest().get_Chest_mesh())
+        //#endregion
 
-        const cchest_2= new CChest([-0.75,0,0]);
+        //#region Second Chest
+        const cchest_2= new CChest(2,[-0.75,0,0]);
         this.#cchests_array.push(cchest_2);
         this.#vchests_array.push(cchest_2.get_VChest().get_Chest_mesh())
+        //#endregion
 
-        // Create the Floor
-        CFloor.getInstance();
-
-        //Cube added to the floor, then it is recorded there
-        //const ccube_1= new CCube();
+        //#region First cube
         const RPY_first_cube = new THREE.Euler(
             0,
             -Math.PI/4,
@@ -47,8 +48,25 @@ export class CScene {
         );
         // Convert XYZ -> quaternion
         const quaternion_first_cube = new THREE.Quaternion().setFromEuler(RPY_first_cube);
-        const array =[quaternion_first_cube.x,quaternion_first_cube.y,quaternion_first_cube.z,quaternion_first_cube.w];
-        this.#selected_cube = new CCube(undefined,undefined,undefined,array);
+        const quaternion_array_first_cube =[quaternion_first_cube.x,quaternion_first_cube.y,quaternion_first_cube.z,quaternion_first_cube.w];
+        const ccube_1 = new CCube(1,undefined,undefined,quaternion_array_first_cube);
+        CFloor.getInstance().add_CCube(ccube_1);
+        //#endregion
+
+        //#region Second Cube
+        const position_second_cube = [-0.5,0.03,0.5];
+        const RPY_second_cube = new THREE.Euler(
+            0,
+            Math.PI/4,
+            -Math.PI/2,
+            'XYZ'
+        );
+        // Convert XYZ -> quaternion
+        const quaternion_second_cube = new THREE.Quaternion().setFromEuler(RPY_second_cube);
+        const quaternion_array_second_cube =[quaternion_second_cube.x,quaternion_second_cube.y,quaternion_second_cube.z,quaternion_second_cube.w];
+        const ccube_2 = new CCube(2,undefined,position_second_cube,quaternion_array_second_cube);
+        CFloor.getInstance().add_CCube(ccube_2);
+        //#endregion
 
         this.#robot = new CRobot();
 
@@ -98,6 +116,7 @@ export class CScene {
     //we need to give the id.
     collect_object(){
         this.#object_collected = true;
+        CFloor.getInstance().remove_CCube(this.#selected_cube);
         const selected_cube_mesh = this.#selected_cube.get_VCube().get_Cube_mesh();
         const selected_cube_Ammo = this.#selected_cube.get_MCube().get_Cube_Ammo();
         this.#robot.get_CGripper().get_VGripper().get_tcp().attach(selected_cube_mesh);
@@ -111,6 +130,9 @@ export class CScene {
         this.#object_collected = false;
         const selected_cube_mesh = this.#selected_cube.get_VCube().get_Cube_mesh();
         const selected_cube_Ammo = this.#selected_cube.get_MCube().get_Cube_Ammo();
+        this.#selected_chest.add_CCube(this.#selected_cube);
+        //this.#selected_cube= null;
+        //this.#selected_chest=null;
         VScene.getInstance().get_scene().attach(selected_cube_mesh);
         selected_cube_Ammo.setCollisionFlags(selected_cube_Ammo.getCollisionFlags() & ~2); //Necessary otherwise strange behaviour when releasing
     }
@@ -148,22 +170,21 @@ export class CScene {
                 .to([final_value], duration) //It must reach target in these milliseconds
                 .easing(TWEEN.Easing.Sinusoidal.InOut) //More sweet animation at the start and at the end
                 .onUpdate(() => { // Function called during the animation
-                    if (this.detect_collisions_between(1,3000) && this.detect_collisions_between(1,2000) && !(this.#object_collected)){
+                    if (this.detect_collisions_between(this.#selected_cube.get_ID(),3000) && this.detect_collisions_between(this.#selected_cube.get_ID(),2000) && !(this.#object_collected)){
                         console.log("Stop grasping");
                         gripper_tween.stop();
                         this.collect_object();
                         resolve();
                     }
-                    if (!(this.detect_collisions_between(1,3000)) && !(this.detect_collisions_between(1,2000)) && this.#object_collected){
+                    if (!(this.detect_collisions_between(this.#selected_cube.get_ID(),3000)) && !(this.detect_collisions_between(this.#selected_cube.get_ID(),2000)) && this.#object_collected){
                         console.log("Release object");
                         this.release_object();
                     }
                     this.#robot.get_CGripper().get_VGripper().get_gripper_mesh().setJointValue('robotiq_85_left_knuckle_joint', current_value[0]);
-                    //robotiq_85_gripper.setJointValue('robotiq_85_left_knuckle_joint', current_value[0]);
                     this.#robot.get_CGripper().get_VGripper().set_last_gripper_value(current_value[0]);
                     this.#robot.get_CGripper().get_MGripper().set_last_gripper_value(current_value[0]);
                 })
-                .onComplete(() => {resolve();}) //Function called at the end of the animation
+                .onComplete(() => {this.#selected_cube= null; this.#selected_chest=null; resolve();}) //Function called at the end of the animation
                 .start(); //Let start the planned Tween
         });
     }
@@ -179,19 +200,25 @@ export class CScene {
             mouse_position.y = ((event.clientY-rect.top)/rect.height)*-2 +1;
             raycaster.setFromCamera(mouse_position, VScene.getInstance().get_camera());
             if(!(this.#object_collected)) {
-                const intersections_with_cubes = raycaster.intersectObject(this.#selected_cube.get_VCube().get_Cube_mesh(), true);
+                const cube_meshes_on_the_floor =[];
+                for(const VCube of VFloor.getInstance().get_VCubes()) {
+                    cube_meshes_on_the_floor.push(VCube.get_Cube_mesh());
+                }
+                const intersections_with_cubes = raycaster.intersectObjects(cube_meshes_on_the_floor, false);
                 if (intersections_with_cubes.length === 0) 
                     return;
-                this.#executing_animation = true;
                 const clicked_cube = intersections_with_cubes[0].object;
-    
                 const id_cube= clicked_cube.userData.id;
+                if (CFloor.getInstance().search_CCube(id_cube) === null)
+                    return;
+                this.#executing_animation = true;
                 const center_cube_position = new THREE.Vector3();
                 clicked_cube.getWorldPosition(center_cube_position);
                 const cube_quaternion = new THREE.Quaternion();
                 clicked_cube.getWorldQuaternion(cube_quaternion);
                 const cube_orientation = new THREE.Euler();
                 cube_orientation.setFromQuaternion(cube_quaternion, 'XYZ');
+                this.#selected_cube = CFloor.getInstance().search_CCube(id_cube);
     
                 // Call the function for the animation of collecting the selected cube
                 this.collect_animation(id_cube,center_cube_position,cube_orientation);
@@ -204,6 +231,11 @@ export class CScene {
                 this.#executing_animation = true;
                 const first_intersected_child_panel = intersections_with_chests[0].object;
                 const clicked_chest = first_intersected_child_panel.parent;
+                const id_chest = clicked_chest.userData.id;
+                for (const CChest of this.#cchests_array) {
+                    if (CChest.get_ID() === id_chest)
+                        this.#selected_chest=CChest;
+                }
                 const center_chest_position = new THREE.Vector3();
                 clicked_chest.getWorldPosition(center_chest_position);
     
@@ -262,44 +294,12 @@ export class CScene {
         const elapsed_Time = this.#timer.getDelta();
         // How to step the physical simulation
         Ammo_environment.getInstance().get_World().stepSimulation(elapsed_Time,10);
-        if (!this.#object_collected){
-            if (this.#selected_cube.get_VCube().get_Cube_mesh() && this.#selected_cube.get_MCube().get_Cube_Ammo()){
-                const motion_state = this.#selected_cube.get_MCube().get_Cube_Ammo().getMotionState();
-                const Ammo_transformation = new Ammo.btTransform();
-                motion_state.getWorldTransform(Ammo_transformation);
-        
-                const position = Ammo_transformation.getOrigin();
-                const orientation = Ammo_transformation.getRotation();
-        
-                this.#selected_cube.get_VCube().get_Cube_mesh().position.set(position.x(),position.y(),position.z());
-                this.#selected_cube.get_VCube().get_Cube_mesh().quaternion.set(orientation.x(), orientation.y(), orientation.z(), orientation.w());
-        
-            }
-            //syncronize_Ammo_to_mesh();
+        CFloor.getInstance().syncronize_Ammo_to_mesh();
+        for (const CChest of this.#cchests_array) {
+            CChest.syncronize_Ammo_to_mesh();
         }
-        else {
-            if (this.#selected_cube.get_VCube().get_Cube_mesh() && this.#selected_cube.get_MCube().get_Cube_Ammo()){
-                    const position = new THREE.Vector3();
-                    const orientation = new THREE.Quaternion();
-                    this.#selected_cube.get_VCube().get_Cube_mesh().getWorldPosition(position);
-                    this.#selected_cube.get_VCube().get_Cube_mesh().getWorldQuaternion(orientation);
-            
-                    const Ammo_transformation = new Ammo.btTransform();
-                    Ammo_transformation.setIdentity();
-            
-                    const Ammo_position = Ammo_transformation.getOrigin();
-                    Ammo_position.setValue(position.x,position.y,position.z);
-            
-                    Ammo_transformation.setRotation(new Ammo.btQuaternion(orientation.x,orientation.y,orientation.z,orientation.w));
-                    this.#selected_cube.get_MCube().get_Cube_Ammo().setWorldTransform(Ammo_transformation);
-                    const motion_state = this.#selected_cube.get_MCube().get_Cube_Ammo().getMotionState();
-            
-                    
-                    motion_state.setWorldTransform(Ammo_transformation);
-                    Ammo_environment.getInstance().get_World().updateSingleAabb(this.#selected_cube.get_MCube().get_Cube_Ammo());
-            
-                }
-            //syncronize_mesh_to_Ammo();
+        if (!(this.#selected_cube===null)){
+            this.#selected_cube.syncronize_mesh_to_Ammo();
         }
         VScene.getInstance().get_renderer().render(VScene.getInstance().get_scene(), VScene.getInstance().get_camera());
     }

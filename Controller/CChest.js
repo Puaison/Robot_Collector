@@ -10,6 +10,7 @@ import { VScene } from "../View/VScene";
  * @see CCube
  */
 export class CChest{
+    #ID;
     /** @type {MChest} The MChest object managed by this controller */
     #mchest = null;
     /** @type {VChest} The VChest object managed by this controller */
@@ -17,14 +18,15 @@ export class CChest{
     /** @type {Array_of_CCube} The collections of cubes that are in the chest*/
     #ccubes=[];
 
-    constructor(position=[0.85,0,0],width_of_the_chest= 0.3,depth_of_the_chest= 0.3,height_of_the_chest= 0.2,thickness_of_panels= 0.005) {
-        this.#vchest= new VChest(width_of_the_chest,depth_of_the_chest,height_of_the_chest,thickness_of_panels);
+    constructor(id=1,position=[0.85,0,0],width_of_the_chest= 0.3,depth_of_the_chest= 0.3,height_of_the_chest= 0.2,thickness_of_panels= 0.005) {
+        this.#ID=id;
+        this.#vchest= new VChest(id,width_of_the_chest,depth_of_the_chest,height_of_the_chest,thickness_of_panels);
         this.#vchest.get_Chest_mesh().position.x = position[0];
         this.#vchest.get_Chest_mesh().position.y = position[1];
         this.#vchest.get_Chest_mesh().position.z = position[2];
         VScene.getInstance().add_mesh(this.#vchest.get_Chest_mesh());
 
-        this.#mchest= new MChest(width_of_the_chest,depth_of_the_chest,height_of_the_chest,thickness_of_panels);
+        this.#mchest= new MChest(id,width_of_the_chest,depth_of_the_chest,height_of_the_chest,thickness_of_panels);
     }
 
     get_VChest() {
@@ -39,10 +41,14 @@ export class CChest{
         return this.#ccubes;
     }
 
+    get_ID() {
+        return this.#ID;
+    }
+
     add_CCube(CCube) {
         this.#ccubes.push(CCube);
-        this.#vchest.add_VCube(CCube.get_vcube());
-        this.#mchest.add_MCube(CCube.get_mcube());
+        this.#vchest.add_VCube(CCube.get_VCube());
+        this.#mchest.add_MCube(CCube.get_MCube());
     }
 
     syncronize_Ammo_to_mesh(){

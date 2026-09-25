@@ -4,6 +4,7 @@ import { MCube } from './MCube';
  * @see MCube
  */
 export class MChest {
+    #ID;
     #width;
     #height;
     #depth;
@@ -11,7 +12,8 @@ export class MChest {
     #thickness;
     /** @type {Array_of_MCube} Array containing all the MCube leaved in this specific chest*/
     #mcubes=[];
-    constructor(width_of_the_chest= 0.3,depth_of_the_chest= 0.3,height_of_the_chest= 0.2,thickness_of_panels= 0.005){
+    constructor(id=1,width_of_the_chest= 0.3,depth_of_the_chest= 0.3,height_of_the_chest= 0.2,thickness_of_panels= 0.005){
+        this.#ID=id;
         this.#width=width_of_the_chest;
         this.#depth=depth_of_the_chest;
         this.#height=height_of_the_chest;
@@ -20,6 +22,9 @@ export class MChest {
 
     get_MCubes(){
         return this.#mcubes;
+    }
+    get_ID() {
+        return this.#ID;
     }
 
     add_MCube(MCube){

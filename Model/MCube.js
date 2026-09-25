@@ -43,6 +43,10 @@ export class MCube {
             collectable_object_inertia_Ammo
         );
         this.#body_Ammo = new Ammo.btRigidBody(info_rigid_body_Ammo);
+        //Not letting slip the box on the other boxes but it continue
+        this.#body_Ammo.setFriction(5.72);//0.72
+        this.#body_Ammo.setRollingFriction(5.72);
+        this.#body_Ammo.setRestitution(0.0);
         this.#body_Ammo.setUserIndex(id);
         this.#body_Ammo.setActivationState(4); //otherwise after sometime Ammo will deactivate it
         Ammo_environment.getInstance().get_World().addRigidBody(this.#body_Ammo);

@@ -33,15 +33,15 @@ export class CFloor {
 
     add_CCube(CCube){
         this.#ccubes.push(CCube);
-        VFloor.getInstance().add_Cube(CCube.get_vcube());
-        MFloor.getInstance().add_Cube(CCube.get_mcube());
+        VFloor.getInstance().add_VCube(CCube.get_VCube());
+        MFloor.getInstance().add_MCube(CCube.get_MCube());
     }
 
     remove_CCube(CCube){
         let index = this.#ccubes.indexOf(CCube);
         this.#ccubes.splice(index,1);
-        VFloor.getInstance().remove_Cube(CCube.get_vcube());
-        MFloor.getInstance().remove_Cube(CCube.get_mcube());
+        VFloor.getInstance().remove_VCube(CCube.get_VCube());
+        MFloor.getInstance().remove_MCube(CCube.get_MCube());
     }
 
     search_CCube(id){

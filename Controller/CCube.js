@@ -4,6 +4,7 @@ import { VScene } from "../View/VScene";
 import { VFloor } from "../View/VFloor";
 import { MFloor } from "../Model/MFloor";
 import { Ammo_environment } from "../Model/Ammo_environment";
+import * as THREE from 'three';
 /**
  * This class is the controller of a particular Cube object and it is responsible to add the cube-mesh to the scene.
  * 
@@ -34,8 +35,11 @@ export class CCube{
      */
     syncronize_Ammo_to_mesh(){
         if (this.#vcube.get_Cube_mesh() && this.#mcube.get_Cube_Ammo()){
+            const ammo_environment = Ammo_environment.getInstance();
+            const Ammo = ammo_environment.get_Ammo();
+
             const motion_state = this.#mcube.get_Cube_Ammo().getMotionState();
-            const Ammo_transformation = new Ammo_environment.getInstance().get_Ammo().btTransform();
+            const Ammo_transformation = new Ammo.btTransform();
             motion_state.getWorldTransform(Ammo_transformation);
     
             const position = Ammo_transformation.getOrigin();
@@ -56,18 +60,20 @@ export class CCube{
      */
     syncronize_mesh_to_Ammo(){
         if (this.#vcube.get_Cube_mesh() && this.#mcube.get_Cube_Ammo()){
+            const ammo_environment = Ammo_environment.getInstance();
+            const Ammo = ammo_environment.get_Ammo();
             const position = new THREE.Vector3();
             const orientation = new THREE.Quaternion();
             this.#vcube.get_Cube_mesh().getWorldPosition(position);
             this.#vcube.get_Cube_mesh().getWorldQuaternion(orientation);
     
-            const Ammo_transformation = new Ammo_environment.getInstance().get_Ammo().btTransform();
+            const Ammo_transformation = new Ammo.btTransform();
             Ammo_transformation.setIdentity();
     
             const Ammo_position = Ammo_transformation.getOrigin();
             Ammo_position.setValue(position.x,position.y,position.z);
     
-            Ammo_transformation.setRotation(new Ammo_environment.getInstance().get_Ammo().btQuaternion(orientation.x,orientation.y,orientation.z,orientation.w));
+            Ammo_transformation.setRotation(new Ammo.btQuaternion(orientation.x,orientation.y,orientation.z,orientation.w));
             this.#mcube.get_Cube_Ammo().setWorldTransform(Ammo_transformation);
             const motion_state = this.#mcube.get_Cube_Ammo().getMotionState();
     

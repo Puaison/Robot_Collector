@@ -7,6 +7,7 @@ import * as THREE from 'three';
  * @see VCube
  */
 export class VChest{
+    #ID;
     #width;
     #height;
     #depth;
@@ -16,7 +17,8 @@ export class VChest{
     /** @type {Array_of_VCube} Cubes in the chest */
     #vcubes = [];
 
-    constructor(width_of_the_chest= 0.3,depth_of_the_chest= 0.3,height_of_the_chest= 0.2,thickness_of_panels= 0.005){
+    constructor(id=1,width_of_the_chest= 0.3,depth_of_the_chest= 0.3,height_of_the_chest= 0.2,thickness_of_panels= 0.005){
+        this.#ID=id;
         this.#body_mesh = new THREE.Group();
         const paper_material = new THREE.MeshStandardMaterial({color: 0xBA8940});
         
@@ -55,10 +57,15 @@ export class VChest{
         //lateral_panel_type_2_2_mesh.position.z= depth_of_the_chest/2; 
         //lateral_panel_type_2_2_mesh.rotation.y = Math.PI/2;
         this.#body_mesh.add(lateral_panel_type_2_2_mesh);
+        this.#body_mesh.userData.id=id;
     }
 
     get_Chest_mesh(){
         return this.#body_mesh;
+    }
+
+    get_ID() {
+        return this.#ID;
     }
 
     get_VCubes(){
