@@ -1,5 +1,5 @@
 import { extract_T_from_q, extract_pose_from_T } from "./direct_kinematics";
-import { normalize_Angle,get_pose_Error,normalize_Angle_Tween } from "./utils";
+import { normalize_Angle,get_pose_Error,normalize_angle_enhanced,shortest_angle_difference } from "./utils";
 import { get_Tranpose_of_6x6_Matrix, get_Matrix_multiplication_6x6,get_Matrix_Vector_multiplication_6x1 } from "./matrix_operations";
 import { Matrix,inverse } from 'ml-matrix';
 
@@ -40,9 +40,9 @@ export function calculate_numerical_Jacobian(q, epsilon = 1e-4) {
         [                pose_plus_0[0] - pose_minus_0[0],                 pose_plus_1[0] - pose_minus_1[0],                 pose_plus_2[0] - pose_minus_2[0],                 pose_plus_3[0] - pose_minus_3[0],                 pose_plus_4[0] - pose_minus_4[0],                 pose_plus_5[0] - pose_minus_5[0]],
         [                pose_plus_0[1] - pose_minus_0[1],                 pose_plus_1[1] - pose_minus_1[1],                 pose_plus_2[1] - pose_minus_2[1],                 pose_plus_3[1] - pose_minus_3[1],                 pose_plus_4[1] - pose_minus_4[1],                 pose_plus_5[1] - pose_minus_5[1]],
         [                pose_plus_0[2] - pose_minus_0[2],                 pose_plus_1[2] - pose_minus_1[2],                 pose_plus_2[2] - pose_minus_2[2],                 pose_plus_3[2] - pose_minus_3[2],                 pose_plus_4[2] - pose_minus_4[2],                 pose_plus_5[2] - pose_minus_5[2]],
-        [normalize_Angle(pose_plus_0[3] - pose_minus_0[3]), normalize_Angle(pose_plus_1[3] - pose_minus_1[3]), normalize_Angle(pose_plus_2[3] - pose_minus_2[3]), normalize_Angle(pose_plus_3[3] - pose_minus_3[3]), normalize_Angle(pose_plus_4[3] - pose_minus_4[3]), normalize_Angle(pose_plus_5[3] - pose_minus_5[3])],
-        [normalize_Angle(pose_plus_0[4] - pose_minus_0[4]), normalize_Angle(pose_plus_1[4] - pose_minus_1[4]), normalize_Angle(pose_plus_2[4] - pose_minus_2[4]), normalize_Angle(pose_plus_3[4] - pose_minus_3[4]), normalize_Angle(pose_plus_4[4] - pose_minus_4[4]), normalize_Angle(pose_plus_5[4] - pose_minus_5[4])],
-        [normalize_Angle(pose_plus_0[5] - pose_minus_0[5]), normalize_Angle(pose_plus_1[5] - pose_minus_1[5]), normalize_Angle(pose_plus_2[5] - pose_minus_2[5]), normalize_Angle(pose_plus_3[5] - pose_minus_3[5]), normalize_Angle(pose_plus_4[5] - pose_minus_4[5]), normalize_Angle(pose_plus_5[5] - pose_minus_5[5])]
+        [shortest_angle_difference(pose_minus_0[3],pose_plus_0[3]), shortest_angle_difference(pose_minus_1[3],pose_plus_1[3]), shortest_angle_difference(pose_minus_2[3],pose_plus_2[3] ), shortest_angle_difference(pose_minus_3[3],pose_plus_3[3] ), shortest_angle_difference(pose_minus_4[3],pose_plus_4[3]), shortest_angle_difference(pose_minus_5[3],pose_plus_5[3])],
+        [shortest_angle_difference(pose_minus_0[4],pose_plus_0[4]), shortest_angle_difference(pose_minus_1[4],pose_plus_1[4] ), shortest_angle_difference(pose_minus_2[4],pose_plus_2[4]), shortest_angle_difference(pose_minus_3[4],pose_plus_3[4]), shortest_angle_difference(pose_minus_4[4],pose_plus_4[4]), shortest_angle_difference(pose_minus_5[4],pose_plus_5[4])],
+        [shortest_angle_difference(pose_minus_0[5],pose_plus_0[5]), shortest_angle_difference(pose_minus_1[5],pose_plus_1[5]), shortest_angle_difference(pose_minus_2[5],pose_plus_2[5]), shortest_angle_difference(pose_minus_3[5],pose_plus_3[5]), shortest_angle_difference(pose_minus_4[5],pose_plus_4[5]), shortest_angle_difference(pose_minus_5[5],pose_plus_5[5])]
     ];
     J = J.map(row => row.map(x => x * (1/(2*epsilon))));
     return J;
@@ -91,7 +91,7 @@ export function inverse_Kinematics(target_pose,initial_q, max_Iterations =100,po
         for (let i = 0; i < 6; i++) {
             actual_q[i] += dq[i];
         }
-        actual_q=actual_q.map(angle => normalize_Angle_Tween(angle));
+        actual_q=actual_q.map(angle => normalize_angle_enhanced(angle));
     }
     console.warn("Inverse Kinematics did not converge");
 

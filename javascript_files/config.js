@@ -1,5 +1,5 @@
 import { inverse_Kinematics } from "./inverse_kinematics";
-import { normalize_Angle} from "./utils";
+import { normalize_angle_enhanced} from "./utils";
 
 // Height of the block where the robot is placed
 
@@ -54,8 +54,7 @@ export const max_iterations = 100;
 // calculate rest pose
 const rest_pose = [0.1,1.52,0.1,0,0,Math.PI/2];
 const temp_rest_q =inverse_Kinematics(rest_pose,robot_initial_joints_values,max_iterations, epsilon_position, epislon_orientation);
-export const rest_q = temp_rest_q.map(angle => normalize_Angle(angle));
-console.log("Valore di q",rest_q);
+export const rest_q = temp_rest_q.map(angle => normalize_angle_enhanced(angle));
 
 // Floor setup
 export const floor_rows = 20;

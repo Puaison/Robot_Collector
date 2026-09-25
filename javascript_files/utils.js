@@ -12,7 +12,7 @@ export function normalize_Angle(angle) {
     //return ((angle + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI;
 }
 
-export function normalize_Angle_Tween(angle){
+export function normalize_angle_enhanced(angle){
     return ((angle + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI;
 }
 
@@ -27,8 +27,8 @@ export function get_pose_Error(targetPose, currentPose) {
         targetPose[1] - currentPose[1],
         targetPose[2] - currentPose[2],
 
-        normalize_Angle(targetPose[3] - currentPose[3]),
-        normalize_Angle(targetPose[4] - currentPose[4]),
-        normalize_Angle(targetPose[5] - currentPose[5])
+        shortest_angle_difference(currentPose[3],targetPose[3]),
+        shortest_angle_difference(currentPose[4],targetPose[4]),
+        shortest_angle_difference(currentPose[5],targetPose[5])
     ];
 }

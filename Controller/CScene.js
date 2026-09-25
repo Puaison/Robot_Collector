@@ -3,7 +3,7 @@ import { CCube } from "./CCube";
 import { CRobot } from "./CRobot";
 import { Ammo_environment } from "../Model/Ammo_environment";
 import { VScene } from "../View/VScene";
-import { normalize_Angle, shortest_angle_difference } from "../javascript_files/utils";
+import { normalize_angle_enhanced, shortest_angle_difference } from "../javascript_files/utils";
 import { rest_q,max_iterations,epsilon_position,epislon_orientation } from "../javascript_files/config";
 import * as TWEEN from '@tweenjs/tween.js';
 import * as THREE from 'three';
@@ -28,19 +28,19 @@ export class CScene {
     #timer=null;
     constructor() {
         //#region First Chest
-        const cchest_1= new CChest(1,[0.75,0,0]);
+        const cchest_1= new CChest(1,[0.81,0,0]);
         this.#cchests_array.push(cchest_1);
         this.#vchests_array.push(cchest_1.get_VChest().get_Chest_mesh())
         //#endregion
 
         //#region Second Chest
-        const cchest_2= new CChest(2,[-0.75,0,0]);
+        const cchest_2= new CChest(2,[-0.80,0,0]);
         this.#cchests_array.push(cchest_2);
         this.#vchests_array.push(cchest_2.get_VChest().get_Chest_mesh())
         //#endregion
 
         //#region First cube
-        const position_first_cube = [0.55,0.03,0.5];
+        const position_first_cube = [0.55,1.5,0.5];
         const RPY_first_cube = new THREE.Euler(
             0,
             -Math.PI/4,
@@ -50,12 +50,12 @@ export class CScene {
         // Convert XYZ -> quaternion
         const quaternion_first_cube = new THREE.Quaternion().setFromEuler(RPY_first_cube);
         const quaternion_array_first_cube =[quaternion_first_cube.x,quaternion_first_cube.y,quaternion_first_cube.z,quaternion_first_cube.w];
-        const ccube_1 = new CCube(1,undefined,position_first_cube,quaternion_array_first_cube);
+        const ccube_1 = new CCube(1,undefined,position_first_cube,quaternion_array_first_cube,0x0000ff);
         CFloor.getInstance().add_CCube(ccube_1);
         //#endregion
 
         //#region Second Cube
-        const position_second_cube = [-0.45,0.03,0.5];
+        const position_second_cube = [-0.45,1.5,0.5];
         const RPY_second_cube = new THREE.Euler(
             0,
             Math.PI/4,
@@ -67,6 +67,21 @@ export class CScene {
         const quaternion_array_second_cube =[quaternion_second_cube.x,quaternion_second_cube.y,quaternion_second_cube.z,quaternion_second_cube.w];
         const ccube_2 = new CCube(2,undefined,position_second_cube,quaternion_array_second_cube,0xff0000);
         CFloor.getInstance().add_CCube(ccube_2);
+        //#endregion
+
+        //#region Third Cube
+        const position_third_cube = [0,1.5,-0.81];
+        const RPY_third_cube = new THREE.Euler(
+            0,
+            0,
+            -Math.PI/2,
+            'XYZ'
+        );
+        // Convert XYZ -> quaternion
+        const quaternion_third_cube = new THREE.Quaternion().setFromEuler(RPY_third_cube);
+        const quaternion_array_third_cube =[quaternion_third_cube.x,quaternion_third_cube.y,quaternion_third_cube.z,quaternion_third_cube.w];
+        const ccube_3 = new CCube(3,undefined,position_third_cube,quaternion_array_third_cube,0x00ff00);
+        CFloor.getInstance().add_CCube(ccube_3);
         //#endregion
 
         this.#robot = new CRobot();
@@ -140,8 +155,8 @@ export class CScene {
 
     move_Threejs_Robot(q_initial, q_final, duration = 5000) {
         return new Promise((resolve) => {
-            // const q = Array.from(q_initial.map(angle => normalize_Angle_Tween(angle)));
-            // const target = Array.from(q_final.map(angle => normalize_Angle_Tween(angle)));
+            // const q = Array.from(q_initial.map(angle => normalize_angle_enhanced_Tween(angle)));
+            // const target = Array.from(q_final.map(angle => normalize_angle_enhanced_Tween(angle)));
             const q_in = Array.from(q_initial);
             const q_fin = Array.from(q_final);
             const target = q_in.map((angle, i) => angle + shortest_angle_difference(angle, q_fin[i]));
@@ -157,7 +172,7 @@ export class CScene {
                         q_in[4],
                         q_in[5]
                     ];
-                    const current_q = temp_q.map(angle => normalize_Angle(angle));
+                    const current_q = temp_q.map(angle => normalize_angle_enhanced(angle));
                     this.#robot.get_VRobot().update_Threejs_Robot_Joints(current_q);
                 })
                 .onComplete(() => {this.#robot.get_VRobot().set_last_q_configuration(target); this.#robot.get_MRobot().set_last_q_configuration(target); resolve();}) //Function called at the end of the animation
@@ -256,11 +271,11 @@ export class CScene {
         const last_q_configuration = this.#robot.get_MRobot().get_last_q_configuration();
         const mid_pose = [center_cube_position.x,center_cube_position.y + 0.2,center_cube_position.z,cube_orientation.x,cube_orientation.y,cube_orientation.z];
         let temp_q = this.#robot.get_MRobot().inverse_Kinematics(mid_pose,this.#robot.get_MRobot().get_last_q_configuration(),max_iterations, epsilon_position, epislon_orientation);
-        const mid_q = temp_q.map(angle => normalize_Angle(angle));
+        const mid_q = temp_q.map(angle => normalize_angle_enhanced(angle));
         await this.move_Threejs_Robot(this.#robot.get_VRobot().get_last_q_configuration(),mid_q,1000);
         const final_pose = [center_cube_position.x,center_cube_position.y,center_cube_position.z,cube_orientation.x,cube_orientation.y,cube_orientation.z];
         temp_q = this.#robot.get_MRobot().inverse_Kinematics(final_pose,this.#robot.get_MRobot().get_last_q_configuration(),max_iterations, epsilon_position, epislon_orientation);
-        const final_q=temp_q.map(angle => normalize_Angle(angle));
+        const final_q=temp_q.map(angle => normalize_angle_enhanced(angle));
         await this.move_Threejs_Robot(this.#robot.get_VRobot().get_last_q_configuration(),final_q,1000);
         await this.open_close_Threejs_Gripper(this.#robot.get_CGripper().get_VGripper().get_last_gripper_value(),0.6,1000);
         await this.move_Threejs_Robot(this.#robot.get_VRobot().get_last_q_configuration(),rest_q,1000);
@@ -271,7 +286,7 @@ export class CScene {
         const move_pose = [center_chest_position.x,center_chest_position.y+0.55,center_chest_position.z,chest_orientation[0],chest_orientation[1],chest_orientation[2]];
         //const move_pose = [-0.85,0.55,0.0,-Math.PI/2,0.0,-Math.PI/2];
         let temp_q = this.#robot.get_MRobot().inverse_Kinematics(move_pose,this.#robot.get_MRobot().get_last_q_configuration(),max_iterations, epsilon_position, epislon_orientation);
-        const move_q=temp_q.map(angle => normalize_Angle(angle));
+        const move_q=temp_q.map(angle => normalize_angle_enhanced(angle));
         await this.move_Threejs_Robot(this.#robot.get_VRobot().get_last_q_configuration(),move_q,1000);
         await this.open_close_Threejs_Gripper(this.#robot.get_CGripper().get_VGripper().get_last_gripper_value(),0.0,2000);
         await this.move_Threejs_Robot(this.#robot.get_VRobot().get_last_q_configuration(),rest_q,1000);

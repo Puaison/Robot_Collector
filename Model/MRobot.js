@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { get_pose_Error,normalize_Angle, normalize_Angle_Tween } from '../javascript_files/utils';
+import { get_pose_Error,normalize_Angle, normalize_angle_enhanced,shortest_angle_difference } from '../javascript_files/utils';
 import { block_Height, DH_A, DH_D,  DH_ALPHA } from "../javascript_files/config"
 import { get_Tranpose_of_6x6_Matrix, get_Matrix_multiplication_6x6,get_Matrix_Vector_multiplication_6x1 } from "../javascript_files/matrix_operations";
 import { Matrix,inverse } from 'ml-matrix';
@@ -171,9 +171,9 @@ export class MRobot{
             [                pose_plus_0[0] - pose_minus_0[0],                 pose_plus_1[0] - pose_minus_1[0],                 pose_plus_2[0] - pose_minus_2[0],                 pose_plus_3[0] - pose_minus_3[0],                 pose_plus_4[0] - pose_minus_4[0],                 pose_plus_5[0] - pose_minus_5[0]],
             [                pose_plus_0[1] - pose_minus_0[1],                 pose_plus_1[1] - pose_minus_1[1],                 pose_plus_2[1] - pose_minus_2[1],                 pose_plus_3[1] - pose_minus_3[1],                 pose_plus_4[1] - pose_minus_4[1],                 pose_plus_5[1] - pose_minus_5[1]],
             [                pose_plus_0[2] - pose_minus_0[2],                 pose_plus_1[2] - pose_minus_1[2],                 pose_plus_2[2] - pose_minus_2[2],                 pose_plus_3[2] - pose_minus_3[2],                 pose_plus_4[2] - pose_minus_4[2],                 pose_plus_5[2] - pose_minus_5[2]],
-            [normalize_Angle(pose_plus_0[3] - pose_minus_0[3]), normalize_Angle(pose_plus_1[3] - pose_minus_1[3]), normalize_Angle(pose_plus_2[3] - pose_minus_2[3]), normalize_Angle(pose_plus_3[3] - pose_minus_3[3]), normalize_Angle(pose_plus_4[3] - pose_minus_4[3]), normalize_Angle(pose_plus_5[3] - pose_minus_5[3])],
-            [normalize_Angle(pose_plus_0[4] - pose_minus_0[4]), normalize_Angle(pose_plus_1[4] - pose_minus_1[4]), normalize_Angle(pose_plus_2[4] - pose_minus_2[4]), normalize_Angle(pose_plus_3[4] - pose_minus_3[4]), normalize_Angle(pose_plus_4[4] - pose_minus_4[4]), normalize_Angle(pose_plus_5[4] - pose_minus_5[4])],
-            [normalize_Angle(pose_plus_0[5] - pose_minus_0[5]), normalize_Angle(pose_plus_1[5] - pose_minus_1[5]), normalize_Angle(pose_plus_2[5] - pose_minus_2[5]), normalize_Angle(pose_plus_3[5] - pose_minus_3[5]), normalize_Angle(pose_plus_4[5] - pose_minus_4[5]), normalize_Angle(pose_plus_5[5] - pose_minus_5[5])]
+            [shortest_angle_difference(pose_minus_0[3],pose_plus_0[3]), shortest_angle_difference(pose_minus_1[3],pose_plus_1[3]), shortest_angle_difference(pose_minus_2[3],pose_plus_2[3] ), shortest_angle_difference(pose_minus_3[3],pose_plus_3[3] ), shortest_angle_difference(pose_minus_4[3],pose_plus_4[3]), shortest_angle_difference(pose_minus_5[3],pose_plus_5[3])],
+            [shortest_angle_difference(pose_minus_0[4],pose_plus_0[4]), shortest_angle_difference(pose_minus_1[4],pose_plus_1[4] ), shortest_angle_difference(pose_minus_2[4],pose_plus_2[4]), shortest_angle_difference(pose_minus_3[4],pose_plus_3[4]), shortest_angle_difference(pose_minus_4[4],pose_plus_4[4]), shortest_angle_difference(pose_minus_5[4],pose_plus_5[4])],
+            [shortest_angle_difference(pose_minus_0[5],pose_plus_0[5]), shortest_angle_difference(pose_minus_1[5],pose_plus_1[5]), shortest_angle_difference(pose_minus_2[5],pose_plus_2[5]), shortest_angle_difference(pose_minus_3[5],pose_plus_3[5]), shortest_angle_difference(pose_minus_4[5],pose_plus_4[5]), shortest_angle_difference(pose_minus_5[5],pose_plus_5[5])]
         ];
         J = J.map(row => row.map(x => x * (1/(2*epsilon))));
         return J;
@@ -252,7 +252,7 @@ export class MRobot{
             for (let i = 0; i < 6; i++) {
                 actual_q[i] += dq[i];
             }
-            actual_q=actual_q.map(angle => normalize_Angle_Tween(angle));
+            actual_q=actual_q.map(angle => normalize_angle_enhanced(angle));
         }
         console.warn("Inverse Kinematics did not converge");
     
