@@ -21,8 +21,12 @@ export class VCube{
         this.#body_mesh = new THREE.Mesh(cube_collectable_geometry,cube_collectable_material);
         this.#body_mesh.position.set(position[0], position[1], position[2]);
         this.#body_mesh.userData.id=id;
-        this.#body_mesh.rotation.z=-Math.PI/2;
-        this.#body_mesh.rotation.x=-Math.PI/2;
+        const quaternion_temp = new THREE.Quaternion(quaternion[0],quaternion[1],quaternion[2],quaternion[3]);
+        const RPY = new THREE.Euler();
+        RPY.setFromQuaternion(quaternion_temp, 'XYZ');
+        this.#body_mesh.rotation.z=RPY.z;
+        this.#body_mesh.rotation.y=-RPY.y;
+        this.#body_mesh.rotation.x=-RPY.x;
     }
 
     get_position(){

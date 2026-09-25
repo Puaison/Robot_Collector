@@ -99,7 +99,7 @@ export function extract_position_from_T(T){
 export function extract_RPY_from_T(T){
     const R = new THREE.Matrix4().extractRotation(T);
     const RPY = new THREE.Euler();
-    RPY.setFromRotationMatrix(R, 'ZYX');
+    RPY.setFromRotationMatrix(R, 'XYZ');
     const roll  = RPY.x;
     const pitch = RPY.y;
     const yaw   = RPY.z;
@@ -121,7 +121,7 @@ export function extract_pose_from_T(T) {
 
 export function extract_T_from_oriented_point(x,y,z,roll,pitch,yaw) {
     const T = new THREE.Matrix4();
-    const R = new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(roll, pitch, yaw, 'ZYX'));
+    const R = new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(roll, pitch, yaw, 'XYZ'));
     T.copy(R);
     T.setPosition(x,y,z);
     return T;

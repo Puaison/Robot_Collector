@@ -9,6 +9,11 @@ export function normalize_Angle(angle) {
     }
 
     return angle;
+    //return ((angle + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI;
+}
+
+export function normalize_Angle_Tween(angle){
+    return ((angle + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI;
 }
 
 export function get_pose_Error(targetPose, currentPose) {

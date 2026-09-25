@@ -189,8 +189,8 @@ export class MRobot{
     extract_RPY_from_T(T){
         const R = new THREE.Matrix4().extractRotation(T);
         const RPY = new THREE.Euler();
-        RPY.setFromRotationMatrix(R, 'ZYX');
-        //RPY.setFromRotationMatrix(R, 'XYZ');
+        //RPY.setFromRotationMatrix(R, 'ZYX');
+        RPY.setFromRotationMatrix(R, 'XYZ');
         const roll  = RPY.x;
         const pitch = RPY.y;
         const yaw   = RPY.z;
@@ -230,7 +230,8 @@ export class MRobot{
 
     inverse_Kinematics(target_pose,initial_q, max_Iterations =100,position_tolerance=1e-4,orientation_tolerance=1e-4, lambda = 0.05){
         //const target_pose = extract_pose_from_T(target_T);
-        let actual_q= [...initial_q];
+        //let actual_q= [...initial_q];
+        let actual_q = Array.from(initial_q);
         //let actual_q= initial_q;
         for(let it = 0; it < max_Iterations; it++){
             const actual_T= this.get_homogeneous_coordinates(actual_q);
@@ -251,6 +252,7 @@ export class MRobot{
             for (let i = 0; i < 6; i++) {
                 actual_q[i] += dq[i];
             }
+            //actual_q=actual_q.map(angle => normalize_Angle(angle));
         }
         console.warn("Inverse Kinematics did not converge");
     

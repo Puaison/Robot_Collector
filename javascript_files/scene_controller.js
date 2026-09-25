@@ -5,7 +5,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import URDFLoader from 'urdf-loader';
 import GUI from 'lil-gui';
 import * as TWEEN from '@tweenjs/tween.js';
-import { normalize_Angle } from './utils.js';
+import { normalize_Angle, normalize_Angle_Tween } from './utils.js';
 import { inverse_Kinematics } from './inverse_kinematics.js';
 
 //#region AMMO Setup
@@ -176,10 +176,10 @@ scene.add(block);
 
 //#region CHESTS
 const chest_mesh_1 = create_chest();
-chest_mesh_1.position.x =0.85;
+chest_mesh_1.position.x =0.75;
 chest_meshes.push(chest_mesh_1);
 const chest_mesh_2 = create_chest();
-chest_mesh_2.position.x =-0.85;
+chest_mesh_2.position.x =-0.75;
 chest_meshes.push(chest_mesh_2);
 
 //#endregion
@@ -313,8 +313,8 @@ export function update_Threejs_Robot_Joints(q,robot_ur5) {
 
 export function move_Threejs_Robot(q_initial, q_final, robot_ur5, duration = 5000) {
     return new Promise((resolve) => {
-        const q = Array.from(q_initial);
-        const target = Array.from(q_final);
+        const q = Array.from(q_initial.map(angle => normalize_Angle_Tween(angle)));
+        const target = Array.from(q_final.map(angle => normalize_Angle_Tween(angle)));
         new TWEEN.Tween(q, My_TWEEN) //Start from q
             .to(target, duration) //It must reach target in these milliseconds
             .easing(TWEEN.Easing.Sinusoidal.InOut) //More sweet animation at the start and at the end
@@ -327,7 +327,7 @@ export function move_Threejs_Robot(q_initial, q_final, robot_ur5, duration = 500
                     q[4],
                     q[5]
                 ];
-                const current_q = temp_q.map(angle => normalize_Angle(angle));
+                const current_q = temp_q.map(angle => normalize_Angle_Tween(angle));
                 update_Threejs_Robot_Joints(current_q, robot_ur5);
             })
             .onComplete(() => {last_q_configuration=target; resolve();}) //Function called at the end of the animation
@@ -414,10 +414,23 @@ export function create_collectable_object(position=[0.5,0.03,0.5]) {
     const collectable_object_mesh = new THREE.Mesh(object_collectable_geometry,collectable_object_material);
     collectable_object_mesh.position.set(position[0], position[1], position[2]);
     collectable_object_mesh.userData.id=1;
+    const eulerXYZ = new THREE.Euler(
+        0,
+        -Math.PI/4,
+        -Math.PI/2,
+        'XYZ'
+    );
+    // Convert XYZ -> quaternion
+    const quaternion_to_write = new THREE.Quaternion().setFromEuler(eulerXYZ);
+    console.log("Quaternion to write in the other file",quaternion_to_write);
+    const RPY = new THREE.Euler();
+    RPY.setFromQuaternion(quaternion_to_write, 'XYZ');
+    console.log("Come vorrei che fosse orientato",RPY);
+
     collectable_object_mesh.rotation.z=-Math.PI/2;
-    collectable_object_mesh.rotation.x=-Math.PI/2;
+    collectable_object_mesh.rotation.y=-Math.PI/4;
     scene.add(collectable_object_mesh);
-    console.log("Come è orientato",collectable_object_mesh.rotation);
+    console.log("Come è orientato veramente",collectable_object_mesh.rotation);
 
     const collectable_object_shape_Ammo = new My_Ammo.btBoxShape(new My_Ammo.btVector3(collectable_object_size/2, collectable_object_size/2, collectable_object_size/2));
     const initial_transformation = new My_Ammo.btTransform();
@@ -620,7 +633,7 @@ function mouse_clicked(event){
             const center_chest_position = new THREE.Vector3();
             clicked_chest.getWorldPosition(center_chest_position);
 
-            const chest_orientation = [-Math.PI/2,0,-Math.PI/2];
+            const chest_orientation = [-Math.PI/2,Math.PI/2,0];//[0,0,-Math.PI/2]
 
             // Call the function for the animation of releasing the cube in the selected chest
             release_animation(center_chest_position,chest_orientation);

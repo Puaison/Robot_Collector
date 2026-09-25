@@ -41,8 +41,8 @@ export class CChest{
 
     add_CCube(CCube) {
         this.#ccubes.push(CCube);
-        this.#vchest.add_Cube(CCube.get_vcube());
-        this.#mchest.add_Cube(CCube.get_mcube());
+        this.#vchest.add_VCube(CCube.get_vcube());
+        this.#mchest.add_MCube(CCube.get_mcube());
     }
 
     syncronize_Ammo_to_mesh(){
