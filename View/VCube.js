@@ -13,11 +13,11 @@ export class VCube{
     /** @type {THREE.Mesh} This is the body of the cube in the three.js environment and represents its mesh.*/
     #body_mesh=null;
 
-    constructor(id=1, dim=0.047, position=[0.5,0.03,0.5],quaternion=[-0.5,-0.5,-0.5,0.5]){
+    constructor(id=1, dim=0.047, position=[0.5,0.03,0.5],quaternion=[-0.5,-0.5,-0.5,0.5],color=0xffff44){
         const cube_collectable_geometry = new THREE.BoxGeometry(dim,dim,dim);
         this.#dimenions=dim;
     
-        const cube_collectable_material = new THREE.MeshStandardMaterial({color: 0xffff44});
+        const cube_collectable_material = new THREE.MeshStandardMaterial({color: color});
         this.#body_mesh = new THREE.Mesh(cube_collectable_geometry,cube_collectable_material);
         this.#body_mesh.position.set(position[0], position[1], position[2]);
         this.#body_mesh.userData.id=id;

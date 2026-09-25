@@ -1,5 +1,5 @@
 import { extract_T_from_q, extract_pose_from_T } from "./direct_kinematics";
-import { normalize_Angle,get_pose_Error } from "./utils";
+import { normalize_Angle,get_pose_Error,normalize_Angle_Tween } from "./utils";
 import { get_Tranpose_of_6x6_Matrix, get_Matrix_multiplication_6x6,get_Matrix_Vector_multiplication_6x1 } from "./matrix_operations";
 import { Matrix,inverse } from 'ml-matrix';
 
@@ -91,6 +91,7 @@ export function inverse_Kinematics(target_pose,initial_q, max_Iterations =100,po
         for (let i = 0; i < 6; i++) {
             actual_q[i] += dq[i];
         }
+        actual_q=actual_q.map(angle => normalize_Angle_Tween(angle));
     }
     console.warn("Inverse Kinematics did not converge");
 

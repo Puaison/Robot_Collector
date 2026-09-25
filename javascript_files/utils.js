@@ -16,6 +16,10 @@ export function normalize_Angle_Tween(angle){
     return ((angle + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI;
 }
 
+export function shortest_angle_difference(from, to) {
+    return Math.atan2(Math.sin(to - from),Math.cos(to - from));
+}
+
 export function get_pose_Error(targetPose, currentPose) {
 
     return [

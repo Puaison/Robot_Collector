@@ -55,6 +55,7 @@ export const max_iterations = 100;
 const rest_pose = [0.1,1.52,0.1,0,0,Math.PI/2];
 const temp_rest_q =inverse_Kinematics(rest_pose,robot_initial_joints_values,max_iterations, epsilon_position, epislon_orientation);
 export const rest_q = temp_rest_q.map(angle => normalize_Angle(angle));
+console.log("Valore di q",rest_q);
 
 // Floor setup
 export const floor_rows = 20;

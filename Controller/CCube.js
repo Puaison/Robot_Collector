@@ -20,9 +20,9 @@ export class CCube{
     /** @type {MCube} The MCube object managed by this controller */
     #mcube = null;
 
-    constructor(id=1, dim=0.047, position=[0.5,0.03,0.5],quaternion=[-0.5,-0.5,-0.5,0.5]){
+    constructor(id=1, dim=0.047, position=[0.5,0.03,0.5],quaternion=[-0.5,-0.5,-0.5,0.5],color =0xffff44){
         this.#ID =id;
-        this.#vcube= new VCube(id,dim,position,quaternion);
+        this.#vcube= new VCube(id,dim,position,quaternion,color);
         VScene.getInstance().add_mesh(this.#vcube.get_Cube_mesh());
         VFloor.getInstance().add_VCube(this.#vcube);
 

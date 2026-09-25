@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { get_pose_Error,normalize_Angle } from '../javascript_files/utils';
+import { get_pose_Error,normalize_Angle, normalize_Angle_Tween } from '../javascript_files/utils';
 import { block_Height, DH_A, DH_D,  DH_ALPHA } from "../javascript_files/config"
 import { get_Tranpose_of_6x6_Matrix, get_Matrix_multiplication_6x6,get_Matrix_Vector_multiplication_6x1 } from "../javascript_files/matrix_operations";
 import { Matrix,inverse } from 'ml-matrix';
@@ -252,7 +252,7 @@ export class MRobot{
             for (let i = 0; i < 6; i++) {
                 actual_q[i] += dq[i];
             }
-            //actual_q=actual_q.map(angle => normalize_Angle(angle));
+            actual_q=actual_q.map(angle => normalize_Angle_Tween(angle));
         }
         console.warn("Inverse Kinematics did not converge");
     

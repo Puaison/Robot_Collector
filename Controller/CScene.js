@@ -3,7 +3,7 @@ import { CCube } from "./CCube";
 import { CRobot } from "./CRobot";
 import { Ammo_environment } from "../Model/Ammo_environment";
 import { VScene } from "../View/VScene";
-import { normalize_Angle, normalize_Angle_Tween } from "../javascript_files/utils";
+import { normalize_Angle, shortest_angle_difference } from "../javascript_files/utils";
 import { rest_q,max_iterations,epsilon_position,epislon_orientation } from "../javascript_files/config";
 import * as TWEEN from '@tweenjs/tween.js';
 import * as THREE from 'three';
@@ -40,6 +40,7 @@ export class CScene {
         //#endregion
 
         //#region First cube
+        const position_first_cube = [0.55,0.03,0.5];
         const RPY_first_cube = new THREE.Euler(
             0,
             -Math.PI/4,
@@ -49,12 +50,12 @@ export class CScene {
         // Convert XYZ -> quaternion
         const quaternion_first_cube = new THREE.Quaternion().setFromEuler(RPY_first_cube);
         const quaternion_array_first_cube =[quaternion_first_cube.x,quaternion_first_cube.y,quaternion_first_cube.z,quaternion_first_cube.w];
-        const ccube_1 = new CCube(1,undefined,undefined,quaternion_array_first_cube);
+        const ccube_1 = new CCube(1,undefined,position_first_cube,quaternion_array_first_cube);
         CFloor.getInstance().add_CCube(ccube_1);
         //#endregion
 
         //#region Second Cube
-        const position_second_cube = [-0.5,0.03,0.5];
+        const position_second_cube = [-0.45,0.03,0.5];
         const RPY_second_cube = new THREE.Euler(
             0,
             Math.PI/4,
@@ -64,7 +65,7 @@ export class CScene {
         // Convert XYZ -> quaternion
         const quaternion_second_cube = new THREE.Quaternion().setFromEuler(RPY_second_cube);
         const quaternion_array_second_cube =[quaternion_second_cube.x,quaternion_second_cube.y,quaternion_second_cube.z,quaternion_second_cube.w];
-        const ccube_2 = new CCube(2,undefined,position_second_cube,quaternion_array_second_cube);
+        const ccube_2 = new CCube(2,undefined,position_second_cube,quaternion_array_second_cube,0xff0000);
         CFloor.getInstance().add_CCube(ccube_2);
         //#endregion
 
@@ -141,19 +142,20 @@ export class CScene {
         return new Promise((resolve) => {
             // const q = Array.from(q_initial.map(angle => normalize_Angle_Tween(angle)));
             // const target = Array.from(q_final.map(angle => normalize_Angle_Tween(angle)));
-            const q = Array.from(q_initial);
-            const target = Array.from(q_final);
-            new TWEEN.Tween(q, this.#My_TWEEN) //Start from q
+            const q_in = Array.from(q_initial);
+            const q_fin = Array.from(q_final);
+            const target = q_in.map((angle, i) => angle + shortest_angle_difference(angle, q_fin[i]));
+            new TWEEN.Tween(q_in, this.#My_TWEEN) //Start from q
                 .to(target, duration) //It must reach target in these milliseconds
                 .easing(TWEEN.Easing.Sinusoidal.InOut) //More sweet animation at the start and at the end
                 .onUpdate(() => { // Function called during the animation
                     const temp_q = [
-                        q[0],
-                        q[1],
-                        q[2],
-                        q[3],
-                        q[4],
-                        q[5]
+                        q_in[0],
+                        q_in[1],
+                        q_in[2],
+                        q_in[3],
+                        q_in[4],
+                        q_in[5]
                     ];
                     const current_q = temp_q.map(angle => normalize_Angle(angle));
                     this.#robot.get_VRobot().update_Threejs_Robot_Joints(current_q);

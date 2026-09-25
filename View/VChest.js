@@ -22,9 +22,9 @@ export class VChest{
         this.#body_mesh = new THREE.Group();
         const paper_material = new THREE.MeshStandardMaterial({color: 0xBA8940});
         
-        const bottom_panel_geometry = new THREE.BoxGeometry(width_of_the_chest,thickness_of_panels,depth_of_the_chest);
+        const bottom_panel_geometry = new THREE.BoxGeometry(width_of_the_chest,0.0001,depth_of_the_chest);
         const bottom_panel = new THREE.Mesh(bottom_panel_geometry,paper_material);
-        bottom_panel.position.y = thickness_of_panels/2;
+        bottom_panel.position.y = 0.0001/2;
         this.#body_mesh.add(bottom_panel);
     
         const lateral_panel_type_1_geometry = new THREE.BoxGeometry(width_of_the_chest,height_of_the_chest,thickness_of_panels);
