@@ -58,12 +58,6 @@ export class VScene{
 
 
 
-        // // GUI
-        // const gui= new GUI();
-        // gui.add(this.#camera, 'fov', 1, 180).onChange(animate);
-
-
-
         // RENDERER
 
         this.#renderer = new THREE.WebGLRenderer(); //it will also create a canvas

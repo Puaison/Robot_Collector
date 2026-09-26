@@ -32,7 +32,7 @@ export class CRobot{
     async load_CRobot(){
         await this.#cgripper.load_CGripper(this.#vrobot.get_loader());
         this.#mrobot.set_MGripper(this.#cgripper.get_MGripper()); //Now if we query the MRobot, it will also take into account the gripper for the direct kinematics
-
+        //From now on the robot will use also the gripper in the direct kinematic function
         this.#rest_q=this.#mrobot.inverse_Kinematics(rest_pose,robot_initial_joints_values,max_iterations, epsilon_position, epislon_orientation);
         this.#vrobot.set_last_q_configuration(this.#rest_q);
         this.#mrobot.set_last_q_configuration(this.#rest_q);
