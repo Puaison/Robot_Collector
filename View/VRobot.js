@@ -21,8 +21,8 @@ export class VRobot {
         const manager = new LoadingManager();
         this.#loader = new URDFLoader(manager);
         this.#loader.packages = {
-            ur_description: '/ur5/',
-            robotiq_85_description: '/ur5/'
+            ur_description: './public/ur5/',
+            robotiq_85_description: './public/ur5/'
         };
         this.#vertical_offset=vertical_offset;
     }
