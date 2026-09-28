@@ -41,7 +41,7 @@ export class CGripper{
     }
 
     /**
-     * Takes the info from the meshes of the contact sensors and copies them to the parallelepiped twins in the Ammo env 
+     * Takes the poses from the meshes of the contact sensors and copies them to the parallelepiped twins in the Ammo env 
      * The bodies of the contact sensors are only kinetic in the Ammo env
      */
     syncronize_finger_mesh_to_Ammo(){

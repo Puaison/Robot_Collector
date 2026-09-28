@@ -1,6 +1,6 @@
 import { LoadingManager } from 'three';
 import URDFLoader from 'urdf-loader';
-import { block_Height } from '../javascript_files/config';
+import { support_robot_base_block_height } from '../javascript_files/config';
 /**
  * This class represents the mesh robot in the Three.js environment.
  * 
@@ -15,16 +15,16 @@ export class VRobot {
     /** @type {Array_of_Float} The current value of the joints of the robot */
     #last_q_configuration = null;
     /** @type {Float} The distance of the base's center of the robot from floor */
-    #offset=0;
+    #vertical_offset=0;
     
-    constructor(offset = block_Height) {
+    constructor(vertical_offset = support_robot_base_block_height) {
         const manager = new LoadingManager();
         this.#loader = new URDFLoader(manager);
         this.#loader.packages = {
             ur_description: '/ur5/',
             robotiq_85_description: '/ur5/'
         };
-        this.#offset=offset;
+        this.#vertical_offset=vertical_offset;
     }
 
     set_last_q_configuration(q) {
@@ -35,30 +35,19 @@ export class VRobot {
     get_last_q_configuration() {
         return this.#last_q_configuration;
     }
-    //Maybe this it is not necessary
-    // async set_gripper(vgripper){
-    //     this.#vgripper= vgripper;
-    //     this.#vgripper.set_loader(this.#loader);
-    //     await this.#vgripper.load_VGripper();
-    // }
-
-    // get_gripper(){
-    //     return this.#vgripper;
-    // }
 
     load_VRobot() {
         return new Promise((resolve, reject) => {
             this.#loader.load(
-                '/ur5/ur5.urdf',
+                './public/ur5/ur5.urdf',
                 robot => {
                     this.#ur5robot = robot;
-                    //scene.add(robot);
                     this.update_Threejs_Robot_Joints(this.#last_q_configuration);
     
                     // Rotatation of the mesh in order to stand on the floor
                     robot.rotation.x = -Math.PI/2;
                     // Robot in the center of the scene above the box
-                    robot.position.set(0, this.#offset, 0);
+                    robot.position.set(0, this.#vertical_offset, 0);
                     resolve();
                 },
                 undefined,

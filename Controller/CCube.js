@@ -24,10 +24,10 @@ export class CCube{
         this.#ID =id;
         this.#vcube= new VCube(id,dim,position,quaternion,color);
         VScene.getInstance().add_mesh(this.#vcube.get_Cube_mesh());
-        VFloor.getInstance().add_VCube(this.#vcube);
+        //VFloor.getInstance().add_VCube(this.#vcube);
 
         this.#mcube= new MCube(id,dim,position,quaternion);
-        MFloor.getInstance().add_MCube(this.#mcube);
+        //MFloor.getInstance().add_MCube(this.#mcube);
     }
     /**
      * Takes the info from the rigid body of the cube in the Ammo env and copies them to the mesh in the scene.
@@ -79,6 +79,7 @@ export class CCube{
     
             
             motion_state.setWorldTransform(Ammo_transformation);
+            // Update also the Axis aligned bounding box of the cube for correctly compute collisions
             Ammo_environment.getInstance().get_World().updateSingleAabb(this.#mcube.get_Cube_Ammo());
     
         }

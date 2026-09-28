@@ -31,7 +31,7 @@ export class VGripper {
     load_VGripper() {
         return new Promise((resolve, reject) => {
             this.#loader.load(
-                '/ur5/robotiq_85_gripper_simple.urdf',
+                './public/ur5/robotiq_85_gripper_simple.urdf',
                 gripper => {
                     this.#ur5gripper = gripper;
                     const finger_sensor_geometry = new THREE.BoxGeometry(0.038, 0.0156, 0.022);

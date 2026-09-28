@@ -1,9 +1,9 @@
 import { inverse_Kinematics } from "./inverse_kinematics";
 import { normalize_angle_enhanced} from "./utils";
 
-// Height of the block where the robot is placed
+// Height of the Support robot base block where the robot is placed
 
-export const block_Height = 0.4;
+export const support_robot_base_block_height = 0.4;
 
 // DH parameters for UR5
 

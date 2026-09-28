@@ -57,6 +57,7 @@ export class VChest{
         //lateral_panel_type_2_2_mesh.position.z= depth_of_the_chest/2; 
         //lateral_panel_type_2_2_mesh.rotation.y = Math.PI/2;
         this.#body_mesh.add(lateral_panel_type_2_2_mesh);
+        
         this.#body_mesh.userData.id=id;
     }
 

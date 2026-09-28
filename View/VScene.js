@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {block_Height} from '../javascript_files/config'
+import {support_robot_base_block_height} from '../javascript_files/config'
 import { LoadingManager } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import URDFLoader from 'urdf-loader';
@@ -25,7 +25,7 @@ export class VScene{
         // SCENE
 
         this.#scene = new THREE.Scene();
-        this.#scene.background = new THREE.Color(0xC5A643);
+        this.#scene.background = new THREE.Color(0x1E2228);
 
         // LIGHTS
 
@@ -70,12 +70,12 @@ export class VScene{
         this.#camera_controls.minDistance = 0.1;
         this.#camera_controls.maxDistance = 5;
 
-        // BLOCK where the robot is placed
-        const geometry_block = new THREE.BoxGeometry(0.15, block_Height, 0.15);
-        const material_block = new THREE.MeshStandardMaterial({ color: 0xC5AA4A });
-        const block = new THREE.Mesh(geometry_block, material_block);
-        block.position.set(0, block_Height/2, 0);
-        this.#scene.add(block);
+        // Support robot base BLOCK where the robot is placed
+        const geometry_support_robot_base_block = new THREE.BoxGeometry(0.15, support_robot_base_block_height, 0.15);
+        const material_support_robot_base_block = new THREE.MeshStandardMaterial({ color: 0xC5AA4A });
+        const support_robot_base_block = new THREE.Mesh(geometry_support_robot_base_block, material_support_robot_base_block);
+        support_robot_base_block.position.set(0, support_robot_base_block_height/2, 0);
+        this.#scene.add(support_robot_base_block);
     }
 
     static getInstance() {

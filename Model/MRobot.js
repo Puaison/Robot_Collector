@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { get_pose_Error,normalize_Angle, normalize_angle_enhanced,shortest_angle_difference } from '../javascript_files/utils';
-import { block_Height, DH_A, DH_D,  DH_ALPHA } from "../javascript_files/config"
+import { support_robot_base_block_height, DH_A, DH_D,  DH_ALPHA } from "../javascript_files/config"
 import { get_Tranpose_of_6x6_Matrix, get_Matrix_multiplication_6x6,get_Matrix_Vector_multiplication_6x1 } from "../javascript_files/matrix_operations";
 import { Matrix,inverse } from 'ml-matrix';
 /**
@@ -21,8 +21,8 @@ export class MRobot{
      * Create the fixed base transformation
      * @param {float} offset distance from the floor
      */
-    constructor(offset=block_Height){
-        // Place the robot above the box
+    constructor(offset=support_robot_base_block_height){
+        // Place the robot above the support base block
         const T_y = new THREE.Matrix4().makeTranslation(0, offset, 0);
         
         // The URDF follows REP-103 conventions. Thus, we need to apply a rotation correction to the last joint orientation obtained by forward kinematics based on the original DH conventions
@@ -114,6 +114,7 @@ export class MRobot{
         
         let T6G = null;
 
+        // if the gripper is mounted on the robot, take its transformation
         if(this.#mgripper === null) { 
             T6G = new THREE.Matrix4();
         }

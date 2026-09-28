@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { block_Height, DH_A, DH_D,  DH_ALPHA } from "./config.js"
+import { support_robot_base_block_height, DH_A, DH_D,  DH_ALPHA } from "./config.js"
 
 export function DHMatrix(a, d, alpha, q_i) {
     const cq = Math.cos(q_i);
@@ -18,7 +18,7 @@ export function DHMatrix(a, d, alpha, q_i) {
 export function extract_T_from_q(q) {
 
     // Place the robot above the box
-    const T_y = new THREE.Matrix4().makeTranslation(0, block_Height, 0);
+    const T_y = new THREE.Matrix4().makeTranslation(0, support_robot_base_block_height, 0);
 
     // The URDF follows REP-103 conventions. Thus, we need to apply a rotation correction to the last joint orientation obtained by forward kinematics based on the original DH conventions
     const T_z = new THREE.Matrix4().makeRotationZ(Math.PI);

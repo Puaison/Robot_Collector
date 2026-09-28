@@ -102,4 +102,8 @@ export class MCube {
     deactivate(){
         this.#body_Ammo.setActivationState(5);
     }
+
+    clear_Ammo() {
+        Ammo_environment.getInstance().get_World().removeRigidBody(this.#body_Ammo);
+    }
 }

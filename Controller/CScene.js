@@ -9,6 +9,7 @@ import * as TWEEN from '@tweenjs/tween.js';
 import * as THREE from 'three';
 import { CFloor } from "./CFloor";
 import { VFloor } from "../View/VFloor";
+import GUI from 'lil-gui';
 
 /**
  * This class is the controller of the whole Scene and coordinates all the objectes between Three.js and Ammo environment. It uses the Singleton Pattern.
@@ -18,6 +19,10 @@ import { VFloor } from "../View/VFloor";
  * @see VChest
  * @see CRobot
  * @see CCube
+ * @see VFloor
+ * @see CFloor
+ * @see VScene
+ * @see Ammo_environment
  */
 export class CScene {
     /** @type {CScene} Singleton Instance of this class */
@@ -36,24 +41,29 @@ export class CScene {
     #selected_cube=null;
     /** @type {CChest} Chest selected by the user where it will be placed the selected cube */
     #selected_chest=null;
-    /** @type {TWEEN.Group} Tween object used to interpolate two joints configurations */
-    #My_TWEEN=null;
+    /** @type {TWEEN.Group} Tween Group used to create a tween that interpolates two joints configurations */
+    #My_TWEEN_Group=null;
+    /** @type {TWEEN.Tween} Current tween in execution */
+    #current_tween=null;
     /** @type {THREE.Timer} Timer used to update the Ammo world */
     #timer=null;
+    /** @type {int} Duration (in millisecond) of each primitive movement */
+    animation_period = 750;
+    /** @type {int} When the current_tween started (in millisecond) */
+    tween_start_time=0;
+    /** @type {int} Time (in millisecond) from the start of the scene */
+    #actual_time;
+    /**
+     * Setup the scene with the written informations in this constructor. Also initialize the various tools (tween,timer,callbacks,GUI).
+     */
     constructor() {
-        //#region First Chest
-        const cchest_1= new CChest(1,[0.81,0,0]);
-        this.#cchests_array.push(cchest_1);
-        this.#vchests_array.push(cchest_1.get_VChest().get_Chest_mesh())
-        //#endregion
+        // First Chest
+        this.create_chest(1,[0.81,0,0]);
 
-        //#region Second Chest
-        const cchest_2= new CChest(2,[-0.80,0,0]);
-        this.#cchests_array.push(cchest_2);
-        this.#vchests_array.push(cchest_2.get_VChest().get_Chest_mesh())
-        //#endregion
+        // Second Chest
+        this.create_chest(2,[-0.80,0,0]);
 
-        //#region First cube
+        // First cube
         const position_first_cube = [0.55,1.5,0.5];
         const RPY_first_cube = new THREE.Euler(
             0,
@@ -61,14 +71,10 @@ export class CScene {
             -Math.PI/2,
             'XYZ'
         );
-        // Convert XYZ -> quaternion
-        const quaternion_first_cube = new THREE.Quaternion().setFromEuler(RPY_first_cube);
-        const quaternion_array_first_cube =[quaternion_first_cube.x,quaternion_first_cube.y,quaternion_first_cube.z,quaternion_first_cube.w];
-        const ccube_1 = new CCube(1,undefined,position_first_cube,quaternion_array_first_cube,0x0000ff);
-        CFloor.getInstance().add_CCube(ccube_1);
-        //#endregion
+        //The first value is the ID of the cube, the last value the color of the mesh in hexadecimal
+        this.create_cube(1,position_first_cube,RPY_first_cube,0xf0fff0);
 
-        //#region Second Cube
+        // Second Cube
         const position_second_cube = [-0.45,1.5,0.5];
         const RPY_second_cube = new THREE.Euler(
             0,
@@ -76,50 +82,146 @@ export class CScene {
             -Math.PI/2,
             'XYZ'
         );
-        // Convert XYZ -> quaternion
-        const quaternion_second_cube = new THREE.Quaternion().setFromEuler(RPY_second_cube);
-        const quaternion_array_second_cube =[quaternion_second_cube.x,quaternion_second_cube.y,quaternion_second_cube.z,quaternion_second_cube.w];
-        const ccube_2 = new CCube(2,undefined,position_second_cube,quaternion_array_second_cube,0xff0000);
-        CFloor.getInstance().add_CCube(ccube_2);
-        //#endregion
+        //The first value is the ID of the cube, the last value the color of the mesh in hexadecimal
+        this.create_cube(2,position_second_cube,RPY_second_cube,0x00fff0);
 
-        //#region Third Cube
-        const position_third_cube = [0,1.5,-0.81];
+        // Third Cube
+        const position_third_cube = [-0.45,1.5,-0.5];
         const RPY_third_cube = new THREE.Euler(
             0,
             0,
             -Math.PI/2,
             'XYZ'
         );
-        // Convert XYZ -> quaternion
-        const quaternion_third_cube = new THREE.Quaternion().setFromEuler(RPY_third_cube);
-        const quaternion_array_third_cube =[quaternion_third_cube.x,quaternion_third_cube.y,quaternion_third_cube.z,quaternion_third_cube.w];
-        const ccube_3 = new CCube(3,undefined,position_third_cube,quaternion_array_third_cube,0x00ff00);
-        CFloor.getInstance().add_CCube(ccube_3);
-        //#endregion
+        //The first value is the ID of the cube, the last value the color of the mesh in hexadecimal
+        this.create_cube(3,position_third_cube,RPY_third_cube,0x00ff00);
 
+        // Initialize the controller of the robot
         this.#robot = new CRobot();
 
         // Tween setup
-        this.#My_TWEEN = new TWEEN.Group();
+        this.#My_TWEEN_Group = new TWEEN.Group();
 
+        //add the callback function to the click mouse-event
         VScene.getInstance().get_renderer().domElement.addEventListener("click", (event) => this.register_mouse_clicked_input(event));
 
+        // Create the timer
         this.#timer=new THREE.Timer();
 
-        // // GUI
-        // const gui= new GUI();
-        // gui.add(this.#camera, 'fov', 1, 180).onChange(animate);
+        // GUI setup
+        const lil_gui= new GUI();
+        //event for changing the camera FOV
+        lil_gui.add(VScene.getInstance().get_camera(), 'fov', 1, 180).name("Change FOV").onChange(() => this.animate());
+        //event for changing the duration of the animations
+        lil_gui.add(this, 'animation_period', 750, 5000).name("Change animation period").onChange(() => this.change_animation_period());
+        
+        //Button for generating new cubes
+        const reset_cube_button = {new_cubes: () => {this.reset_cubes();}};
+        lil_gui.add(reset_cube_button, "new_cubes").name("Reset cubes");
 
 
+    }
+
+    reset_cubes(){
+        if(!(this.#executing_animation)){
+            for (const ccube of [...CFloor.getInstance().get_CCubes()]) {
+                ccube.get_VCube().clear_mesh();
+                ccube.get_MCube().clear_Ammo();
+                CFloor.getInstance().remove_CCube(ccube);
+            }
+            // First cube
+            const position_first_cube = [0.55,1.5,0.5];
+            const RPY_first_cube = new THREE.Euler(
+                0,
+                -Math.PI/4,
+                -Math.PI/2,
+                'XYZ'
+            );
+            //The first value is the ID of the cube, the last value the color of the mesh in hexadecimal
+            this.create_cube(1,position_first_cube,RPY_first_cube,0xf0fff0);
+
+            // Second Cube
+            const position_second_cube = [-0.45,1.5,0.5];
+            const RPY_second_cube = new THREE.Euler(
+                0,
+                Math.PI/4,
+                -Math.PI/2,
+                'XYZ'
+            );
+            //The first value is the ID of the cube, the last value the color of the mesh in hexadecimal
+            this.create_cube(2,position_second_cube,RPY_second_cube,0x00fff0);
+
+            // Third Cube
+            const position_third_cube = [-0.45,1.5,-0.5];
+            const RPY_third_cube = new THREE.Euler(
+                0,
+                0,
+                -Math.PI/2,
+                'XYZ'
+            );
+            //The first value is the ID of the cube, the last value the color of the mesh in hexadecimal
+            this.create_cube(3,position_third_cube,RPY_third_cube,0x00ff00);
+            
+        }
+
+    }
+
+    
+
+    change_animation_period() {
+        //If no active tween, interrupt the function
+        if (this.#current_tween===null)
+            return;
+
+        //If there is an active tween, compute the new remaining time proportionally to the new animation duration and to the current tween's completion percentage 
+        const elapsed_tween_time = this.#actual_time - this.tween_start_time;
+        //Actual progress of the tween (in percentage) => 0.0 at the beginning, 0.50 robot in the middle, 1.0 at the end.
+        const progress_tween = elapsed_tween_time / this.#current_tween._duration;
+        // Scale the progress time w.r.t. the tween's percentage of completion and the new animation period
+        const new_elapsed_tween_time = progress_tween * this.animation_period;
+        // Compute the remainining time scaled to the new animation period
+        const remaining_tween_time = this.animation_period - new_elapsed_tween_time;
+        this.#current_tween.stop();
+        this.#current_tween.duration(remaining_tween_time).start(this.#actual_time, true); //restart from the last conf
+        this.tween_start_time = this.#actual_time;
     }
 
     static async getInstance() {
         if (CScene.#instance === null) {
             CScene.#instance = new CScene();
+            //Load the robot and the gripper (both Views and Models)
             await CScene.#instance.#robot.load_CRobot();
         }
         return CScene.#instance;
+    }
+
+    /**
+     * Method of the controller that effectively creates a cube in the scene (and adds it to the floor) with the following informations:
+     * @param {int} id 
+     * @param {Array_of_float} position of the center of the cube
+     * @param {Array_of_float} rpy_orientation 
+     * @param {int} color in hexadecimal
+     */
+    create_cube(id,position,rpy_orientation,color){
+        // Convert XYZ -> quaternion
+        const quaternion = new THREE.Quaternion().setFromEuler(rpy_orientation);
+        const quaternion_array =[quaternion.x,quaternion.y,quaternion.z,quaternion.w];
+        //Create the associated controller of the cube
+        const ccube = new CCube(id,undefined,position,quaternion_array,color);
+        //Add the cube to the floor 
+        CFloor.getInstance().add_CCube(ccube);
+    }
+    /**
+     * Method of the controller that effectively creates a chest in the scene with the following informations:
+     * @param {int} id 
+     * @param {Array_of_float} position 
+     */
+    create_chest(id,position){
+        //Create the associated controller of the chest
+        const cchest= new CChest(id,position);
+        // Add the chest to the arrays that control it 
+        this.#cchests_array.push(cchest);
+        this.#vchests_array.push(cchest.get_VChest().get_Chest_mesh())
     }
 
     /**
@@ -180,15 +282,17 @@ export class CScene {
         selected_cube_Ammo.setCollisionFlags(selected_cube_Ammo.getCollisionFlags() & ~2); //Necessary otherwise strange behaviour when releasing
     }
 
-    move_Threejs_Robot(q_initial, q_final, duration = 5000) {
+    move_Threejs_Robot(q_initial, q_final) {
         return new Promise((resolve) => {
             // const q = Array.from(q_initial.map(angle => normalize_angle_enhanced_Tween(angle)));
             // const target = Array.from(q_final.map(angle => normalize_angle_enhanced_Tween(angle)));
             const q_in = Array.from(q_initial);
             const q_fin = Array.from(q_final);
             const target = q_in.map((angle, i) => angle + shortest_angle_difference(angle, q_fin[i]));
-            new TWEEN.Tween(q_in, this.#My_TWEEN) //Start from q
-                .to(target, duration) //It must reach target in these milliseconds
+            this.tween_start_time = this.#actual_time;
+            //this.last_tween_duration = this.animation_period;
+            this.#current_tween = new TWEEN.Tween(q_in, this.#My_TWEEN_Group) //Start from q
+                .to(target, this.animation_period) //It must reach target in these milliseconds
                 .easing(TWEEN.Easing.Sinusoidal.InOut) //More sweet animation at the start and at the end
                 .onUpdate(() => { // Function called during the animation
                     const temp_q = [
@@ -200,96 +304,130 @@ export class CScene {
                         q_in[5]
                     ];
                     const current_q = temp_q.map(angle => normalize_angle_enhanced(angle));
+                    this.#robot.get_VRobot().set_last_q_configuration(current_q); 
+                    this.#robot.get_MRobot().set_last_q_configuration(current_q);
                     this.#robot.get_VRobot().update_Threejs_Robot_Joints(current_q);
                 })
-                .onComplete(() => {this.#robot.get_VRobot().set_last_q_configuration(target); this.#robot.get_MRobot().set_last_q_configuration(target); resolve();}) //Function called at the end of the animation
-                .start(); //Let start the planned Tween
+                .onComplete(() => {this.#current_tween=null; resolve();}) //Function called at the end of the animation
+                .start(this.#actual_time); //Let start the planned Tween
         });
     }
 
-    open_close_Threejs_Gripper(initial_value, final_value, duration = 5000) {
+    open_close_Threejs_Gripper(initial_value, final_value) {
         return new Promise((resolve) => {
             const current_value = [initial_value];
-            const gripper_tween = new TWEEN.Tween(current_value, this.#My_TWEEN) //Start from current_value
-                .to([final_value], duration) //It must reach target in these milliseconds
+            this.tween_start_time = this.#actual_time;
+            //this.last_tween_duration = this.animation_period;
+            this.#current_tween = new TWEEN.Tween(current_value, this.#My_TWEEN_Group) //Start from current_value
+                .to([final_value], this.animation_period) //It must reach target in these milliseconds
                 .easing(TWEEN.Easing.Sinusoidal.InOut) //More sweet animation at the start and at the end
                 .onUpdate(() => { // Function called during the animation
+                    this.#robot.get_CGripper().get_VGripper().set_last_gripper_value(current_value[0]);
+                    this.#robot.get_CGripper().get_MGripper().set_last_gripper_value(current_value[0]);
+                    this.#robot.get_CGripper().get_VGripper().get_gripper_mesh().setJointValue('robotiq_85_left_knuckle_joint', current_value[0]);
                     if (this.detect_collisions_between(this.#selected_cube.get_ID(),3000) && this.detect_collisions_between(this.#selected_cube.get_ID(),2000) && !(this.#object_collected)){
-                        console.log("Stop grasping");
-                        gripper_tween.stop();
+                        console.log("Object collected");
+                        this.#current_tween.stop();
                         this.collect_cube();
+                        this.#current_tween=null;
                         resolve();
                     }
                     if (!(this.detect_collisions_between(this.#selected_cube.get_ID(),3000)) && !(this.detect_collisions_between(this.#selected_cube.get_ID(),2000)) && this.#object_collected){
-                        console.log("Release object");
+                        console.log("Object released");
                         this.release_cube();
                     }
-                    this.#robot.get_CGripper().get_VGripper().get_gripper_mesh().setJointValue('robotiq_85_left_knuckle_joint', current_value[0]);
-                    this.#robot.get_CGripper().get_VGripper().set_last_gripper_value(current_value[0]);
-                    this.#robot.get_CGripper().get_MGripper().set_last_gripper_value(current_value[0]);
                 })
-                .onComplete(() => {this.#selected_cube= null; this.#selected_chest=null; resolve();}) //Function called at the end of the animation
-                .start(); //Let start the planned Tween
+                .onComplete(() => {this.#selected_cube= null; this.#selected_chest=null; this.#current_tween=null; resolve();}) //Function called at the end of the animation
+                .start(this.#actual_time); //Let start the planned Tween
         });
     }
     /**
-     * Method called each time the left mouse button is pressed in order to identify if a cube or a chest is clicked
+     * Method called each time the left mouse button is pressed. Accordingly to the interaction-state-machine, this method handles the input
+     * and verify if the clicked object (recovered through a ray passing for the position of the mouse on the screen) can partecipate to the interaction 
      * @param {*} event 
      */
-
     register_mouse_clicked_input(event){
+        // If the robot is executing an animation, ignore every selected object
         if (!this.#executing_animation){
             const raycaster = new THREE.Raycaster();
             const mouse_position = new THREE.Vector2();
-            const rect = VScene.getInstance().get_renderer().domElement.getBoundingClientRect();
-    
-            mouse_position.x = ((event.clientX-rect.left)/rect.width)*2 -1;
-    
-            mouse_position.y = ((event.clientY-rect.top)/rect.height)*-2 +1;
+
+            //position of the mouse on the screen in normalized coordinates between -1 and +1
+            mouse_position.x = (event.clientX/window.innerWidth)*2 -1;
+            mouse_position.y = (event.clientY/window.innerHeight)*-2 +1;
+
+            //Generate a ray that starts from the camera position and pass through the screen plane in the position of the mouse
             raycaster.setFromCamera(mouse_position, VScene.getInstance().get_camera());
+            // If the robot has not an object in its gripper yet:
             if(!(this.#object_collected)) {
+
+                // Recover all the meshes of the cubes on the floor and push them in an array
                 const cube_meshes_on_the_floor =[];
                 for(const VCube of VFloor.getInstance().get_VCubes()) {
                     cube_meshes_on_the_floor.push(VCube.get_Cube_mesh());
                 }
+
+                // Verify if the ray intersects a cube mesh on the floor
                 const intersections_with_cubes = raycaster.intersectObjects(cube_meshes_on_the_floor, false);
+
+                // If the ray has intersected a cube, get the first. Otherwise interrupt the function
                 if (intersections_with_cubes.length === 0) 
                     return;
+                //Get the first intersected cube
                 const clicked_cube = intersections_with_cubes[0].object;
+
+                //recover the id of the clicked cube from the corresponding mesh
                 const id_cube= clicked_cube.userData.id;
+
+                //if the clicked cube is not on the floor (and then it is in a chest) interrupt the function
                 if (CFloor.getInstance().search_CCube(id_cube) === null)
                     return;
+
+                //Prepare the interaction-state-machine for the execution of the collect animation
                 this.#executing_animation = true;
+
+                //Get the pose of the cube
                 const center_cube_position = new THREE.Vector3();
                 clicked_cube.getWorldPosition(center_cube_position);
                 const cube_quaternion = new THREE.Quaternion();
                 clicked_cube.getWorldQuaternion(cube_quaternion);
                 const cube_orientation = new THREE.Euler();
                 cube_orientation.setFromQuaternion(cube_quaternion, 'XYZ');
+
+                //Save the selected cube in this controller
                 this.#selected_cube = CFloor.getInstance().search_CCube(id_cube);
     
-                // Call the function for the animation of collecting the selected cube
+                // Call the function for executing the animation of collecting the selected cube
                 this.collect_animation(center_cube_position,cube_orientation);
             }
-            else {
+            else {// Instead, if the robot has a cube in its gripper:
+                // Verify if the ray intersect a chest mesh
                 const intersections_with_chests = raycaster.intersectObjects(this.#vchests_array, true);
-    
+                // If the ray has intersected a panel of a chest, get the whole mesh of the first intersected chest. Otherwise interrupt the function
                 if (intersections_with_chests.length === 0)
                     return;
+
+                //Prepare the interaction-state-machine for the execution of the release animation
                 this.#executing_animation = true;
+
+                //Get the first intersected chest's panel
                 const first_intersected_child_panel = intersections_with_chests[0].object;
+
+                //Recover the parent (the whole chest) of the intersected panel
                 const clicked_chest = first_intersected_child_panel.parent;
+
+                //Recover the id of the chest from the mesh and select the associated CChest object
                 const id_chest = clicked_chest.userData.id;
                 for (const CChest of this.#cchests_array) {
                     if (CChest.get_ID() === id_chest)
                         this.#selected_chest=CChest;
                 }
+                //Get the pose of the chest
                 const center_chest_position = new THREE.Vector3();
                 clicked_chest.getWorldPosition(center_chest_position);
-    
                 const chest_orientation = [-Math.PI/2,Math.PI/2,0];
     
-                // Call the function for the animation of releasing the cube in the selected chest
+                // Call the function for executing the animation of releasing the cube in the selected chest
                 this.release_animation(center_chest_position,chest_orientation);
             }
         }
@@ -307,17 +445,18 @@ export class CScene {
         const mid_pose = [center_cube_position.x,center_cube_position.y + 0.2,center_cube_position.z,cube_orientation.x,cube_orientation.y,cube_orientation.z];
         const mid_q = this.#robot.get_MRobot().inverse_Kinematics(mid_pose,this.#robot.get_MRobot().get_last_q_configuration(),max_iterations, epsilon_position, epislon_orientation);
         //Start the tween to move the robot from the rest pose to the mid pose upon the cube with a vertcial offset of 0.2m
-        await this.move_Threejs_Robot(this.#robot.get_VRobot().get_last_q_configuration(),mid_q,1000);
+        await this.move_Threejs_Robot(this.#robot.get_VRobot().get_last_q_configuration(),mid_q);
 
         //The robot calculates the final pose to align the the center of the gripper (TCP) with the cube
         const final_pose = [center_cube_position.x,center_cube_position.y,center_cube_position.z,cube_orientation.x,cube_orientation.y,cube_orientation.z];
         const final_q = this.#robot.get_MRobot().inverse_Kinematics(final_pose,this.#robot.get_MRobot().get_last_q_configuration(),max_iterations, epsilon_position, epislon_orientation);
         //Start the tween to move the robot so that the gripper goes down to align with the cube
-        await this.move_Threejs_Robot(this.#robot.get_VRobot().get_last_q_configuration(),final_q,1000);
+        await this.move_Threejs_Robot(this.#robot.get_VRobot().get_last_q_configuration(),final_q);
         //Start the tween to close the gripper until the two contact sensors detect collision with the cube 
-        await this.open_close_Threejs_Gripper(this.#robot.get_CGripper().get_VGripper().get_last_gripper_value(),0.6,1000);
+        await this.open_close_Threejs_Gripper(this.#robot.get_CGripper().get_VGripper().get_last_gripper_value(),0.6);
         //Start the tween to move the robot to the rest pose with the cube.
-        await this.move_Threejs_Robot(this.#robot.get_VRobot().get_last_q_configuration(),this.#robot.get_rest_q(),1000);
+        await this.move_Threejs_Robot(this.#robot.get_VRobot().get_last_q_configuration(),this.#robot.get_rest_q());
+        //Release the interaction-state-machine from the blocking animation
         this.#executing_animation = false;
     }
 
@@ -330,11 +469,12 @@ export class CScene {
         const move_pose = [center_chest_position.x,center_chest_position.y+0.55,center_chest_position.z,chest_orientation[0],chest_orientation[1],chest_orientation[2]];
         const move_q = this.#robot.get_MRobot().inverse_Kinematics(move_pose,this.#robot.get_MRobot().get_last_q_configuration(),max_iterations, epsilon_position, epislon_orientation);
         //Start the tween to move the robot from the rest pose to the move pose upon the chest with a vertcial offset of 0.55m
-        await this.move_Threejs_Robot(this.#robot.get_VRobot().get_last_q_configuration(),move_q,1000);
+        await this.move_Threejs_Robot(this.#robot.get_VRobot().get_last_q_configuration(),move_q);
         //Start the tween to open the gripper and release the cube
-        await this.open_close_Threejs_Gripper(this.#robot.get_CGripper().get_VGripper().get_last_gripper_value(),0.0,2000);
+        await this.open_close_Threejs_Gripper(this.#robot.get_CGripper().get_VGripper().get_last_gripper_value(),0.0);
         //Start the tween to move the robot to the rest pose without the cube.
-        await this.move_Threejs_Robot(this.#robot.get_VRobot().get_last_q_configuration(),this.#robot.get_rest_q(),1000);
+        await this.move_Threejs_Robot(this.#robot.get_VRobot().get_last_q_configuration(),this.#robot.get_rest_q());
+        //Release the interaction-state-machine from the blocking animation
         this.#executing_animation = false;
     
     }
@@ -342,13 +482,13 @@ export class CScene {
      * Method called each frame by the renderer for drawing all the objects in the scene
      * @param {float} time 
      */
-
     animate(time){
+        this.#actual_time=time;
         VScene.getInstance().get_renderer().setSize(window.innerWidth, window.innerHeight); // Command used to adapt the canvas and the scene to a resizing window
         VScene.getInstance().get_camera().aspect = window.innerWidth/window.innerHeight; // Command used to correctly update the projection of the scene after window resizing
         VScene.getInstance().get_camera().updateProjectionMatrix(); // Command used to correctly update the projection of the scene after window resizing
         VScene.getInstance().get_camera_controls().update();
-        this.#My_TWEEN.update(time); //Necessary for making tween works
+        this.#My_TWEEN_Group.update(time); //Necessary for making tween works
         if (this.#robot.get_CGripper().get_MGripper().get_finger_contact_sensor_left_Ammo() && this.#robot.get_CGripper().get_MGripper().get_finger_contact_sensor_right_Ammo()) {
             //skip this if the finger sensors are not already initialized
 

@@ -35,6 +35,7 @@ export class Ammo_environment{
             solver,
             collision_confinguration
         );
+        // Set the gravity of the Ammo env like that of the real world
         this.#world.setGravity(new this.#my_ammo.btVector3(0, -9.0, 0));
     }
 

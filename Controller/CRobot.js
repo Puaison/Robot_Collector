@@ -1,4 +1,4 @@
-import { rest_pose,block_Height,robot_initial_joints_values,max_iterations, epsilon_position, epislon_orientation } from '../javascript_files/config';
+import { rest_pose,support_robot_base_block_height,robot_initial_joints_values,max_iterations, epsilon_position, epislon_orientation } from '../javascript_files/config';
 import { MRobot } from '../Model/MRobot';
 import { VRobot } from '../View/VRobot';
 import { VScene } from '../View/VScene';
@@ -21,7 +21,11 @@ export class CRobot{
     /** @type {Array_of_float} The robot configuration in which it is waiting for input */
     #rest_q=null; 
 
-    constructor(offset = block_Height) {
+    /**
+     * Create the robot both in the View and in the Model packages. It will be placed at the center of the world frame (and the base parallel to the ground) with a vertical offset due to the support block
+     * @param {float} offset height of the support base block for the robot
+     */
+    constructor(offset = support_robot_base_block_height) {
         this.#vrobot = new VRobot(offset);
         this.#mrobot = new MRobot(offset);
         this.#cgripper= new CGripper();

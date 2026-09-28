@@ -31,7 +31,7 @@ export class VFloor{
                     tile_color = new THREE.MeshStandardMaterial({color: 0x000000}); 
                 }
                 else {
-                    tile_color = new THREE.MeshStandardMaterial({color: 0xC5AA4A}); 
+                    tile_color = new THREE.MeshStandardMaterial({color: 0xF5AA4A}); 
                 }
         
                 const tile = new THREE.Mesh(tile_geometry, tile_color);

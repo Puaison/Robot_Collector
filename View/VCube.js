@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { VScene } from './VScene';
 /**
  * This class represents the mesh cube in the Three.js environment that can be collected by the robot.
  * 
@@ -59,5 +60,9 @@ export class VCube{
 
     get_Cube_mesh() {
         return this.#body_mesh;
+    }
+
+    clear_mesh(){
+        VScene.getInstance().get_scene().remove(this.#body_mesh);
     }
 }
