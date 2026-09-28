@@ -1,11 +1,14 @@
-import { MFloor } from "../Model/MFloor";
-import { VFloor } from "../View/VFloor";
-import { VScene } from "../View/VScene";
+import { MFloor } from "../Model/MFloor.js";
+import { VFloor } from "../View/VFloor.js";
+import { VScene } from "../View/VScene.js";
 /**
  * This class is the controller of the floor object.
  * 
  * Responsibility: syncronizes the data (mesh and rigid body in Ammo env) of each cube placed on it and it is responsible to add the floor-mesh to the scene.
  * @see CCube
+ * @see MFloor
+ * @see VFloor
+ * @see VScene
  */
 export class CFloor {
     /** @type {CFloor} Singleton Instance of this class */

@@ -1,6 +1,6 @@
-import { MChest } from "../Model/MChest";
-import { VChest } from "../View/VChest";
-import { VScene } from "../View/VScene";
+import { MChest } from "../Model/MChest.js";
+import { VChest } from "../View/VChest.js";
+import { VScene } from "../View/VScene.js";
 /**
  * This class is the controller of a particular Chest object and it is responsible to add the Chest-mesh to the scene.
  * 
@@ -8,6 +8,7 @@ import { VScene } from "../View/VScene";
  * @see MChest
  * @see VChest
  * @see CCube
+ * @see VScene
  */
 export class CChest{
     #ID;

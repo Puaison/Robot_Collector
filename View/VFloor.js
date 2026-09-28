@@ -1,4 +1,4 @@
-import { floor_rows, floor_coloumns, floor_tile_size, floor_tile_height } from '../javascript_files/config';
+import { floor_rows, floor_coloumns, floor_tile_size, floor_tile_height } from '../javascript_files/config.js';
 import * as THREE from 'three';
 /**
  * This class represents the mesh floor in the Three.js environment. It is a Singleton class as only one floor can be present.

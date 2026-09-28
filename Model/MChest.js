@@ -1,4 +1,3 @@
-import { MCube } from './MCube';
 /**
  * This class represents one chest and the relative informations of a chest
  * @see MCube

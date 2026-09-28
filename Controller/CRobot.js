@@ -1,8 +1,8 @@
-import { rest_pose,support_robot_base_block_height,robot_initial_joints_values,max_iterations, epsilon_position, epislon_orientation } from '../javascript_files/config';
-import { MRobot } from '../Model/MRobot';
-import { VRobot } from '../View/VRobot';
-import { VScene } from '../View/VScene';
-import { CGripper } from './CGripper';
+import { rest_pose,support_robot_base_block_height,robot_initial_joints_values,max_iterations, epsilon_position, epislon_orientation } from '../javascript_files/config.js';
+import { MRobot } from '../Model/MRobot.js';
+import { VRobot } from '../View/VRobot.js';
+import { VScene } from '../View/VScene.js';
+import { CGripper } from './CGripper.js';
 /**
  * This class is the controller of the robot. It assists the process of loading correctly the informations and syncronizing them between the View and Model Packages.
  * 

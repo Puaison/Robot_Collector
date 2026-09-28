@@ -1,14 +1,14 @@
-import { CChest } from "./CChest";
-import { CCube } from "./CCube";
-import { CRobot } from "./CRobot";
-import { Ammo_environment } from "../Model/Ammo_environment";
-import { VScene } from "../View/VScene";
-import { normalize_angle_enhanced, shortest_angle_difference } from "../javascript_files/utils";
-import { max_iterations,epsilon_position,epislon_orientation } from "../javascript_files/config";
+import { CChest } from "./CChest.js";
+import { CCube } from "./CCube.js";
+import { CRobot } from "./CRobot.js";
+import { Ammo_environment } from "../Model/Ammo_environment.js";
+import { VScene } from "../View/VScene.js";
+import { normalize_angle_enhanced, shortest_angle_difference } from "../javascript_files/utils.js";
+import { max_iterations,epsilon_position,epislon_orientation } from "../javascript_files/config.js";
 import * as TWEEN from '@tweenjs/tween.js';
 import * as THREE from 'three';
-import { CFloor } from "./CFloor";
-import { VFloor } from "../View/VFloor";
+import { CFloor } from "./CFloor.js";
+import { VFloor } from "../View/VFloor.js";
 import GUI from 'lil-gui';
 
 /**

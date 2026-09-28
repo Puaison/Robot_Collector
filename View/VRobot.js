@@ -1,6 +1,6 @@
 import { LoadingManager } from 'three';
 import URDFLoader from 'urdf-loader';
-import { support_robot_base_block_height } from '../javascript_files/config';
+import { support_robot_base_block_height } from '../javascript_files/config.js';
 /**
  * This class represents the mesh robot in the Three.js environment.
  * 

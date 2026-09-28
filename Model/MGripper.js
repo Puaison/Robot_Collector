@@ -1,4 +1,4 @@
-import {Ammo_environment} from './Ammo_environment';
+import {Ammo_environment} from './Ammo_environment.js';
 import * as THREE from 'three';
 /**
  * This class represents one gripper with its contact sensors in the Ammo environment.

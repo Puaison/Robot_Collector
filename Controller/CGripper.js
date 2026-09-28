@@ -1,7 +1,6 @@
-import { MGripper } from "../Model/MGripper";
-import { VGripper } from "../View/VGripper";
-import { VScene } from "../View/VScene";
-import { Ammo_environment } from "../Model/Ammo_environment";
+import { MGripper } from "../Model/MGripper.js";
+import { VGripper } from "../View/VGripper.js";
+import { Ammo_environment } from "../Model/Ammo_environment.js";
 import * as THREE from 'three';
 /**
  * This class is the controller of the gripper. It assists the process of loading correctly the informations and syncronizing them between the View and Model Packages.

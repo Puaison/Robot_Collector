@@ -1,9 +1,6 @@
 import * as THREE from 'three';
-import {support_robot_base_block_height} from '../javascript_files/config'
-import { LoadingManager } from 'three';
+import {support_robot_base_block_height} from '../javascript_files/config.js'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import URDFLoader from 'urdf-loader';
-import GUI from 'lil-gui';
 
 /**
  * This class represents the scene in the Three.js environment with all its components. It uses the Singleton Pattern.

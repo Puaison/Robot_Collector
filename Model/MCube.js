@@ -1,4 +1,4 @@
-import {Ammo_environment} from './Ammo_environment';
+import {Ammo_environment} from './Ammo_environment.js';
 /**
  * This class represents one cube in the Ammo environment that can be collected by the robot.
  * 

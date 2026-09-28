@@ -1,6 +1,5 @@
-import {Ammo_environment} from './Ammo_environment';
-import { floor_Width, floor_Height } from '../javascript_files/config';
-import { MCube } from './MCube';
+import {Ammo_environment} from './Ammo_environment.js';
+import { floor_Width, floor_Height } from '../javascript_files/config.js';
 /**
  * This class represents the floor in the Ammo environment. It is a Singleton class as only one floor can be present. 
  * 

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { VScene } from './VScene';
+import { VScene } from './VScene.js';
 /**
  * This class represents the mesh cube in the Three.js environment that can be collected by the robot.
  * 

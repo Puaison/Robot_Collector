@@ -1,7 +1,7 @@
 import * as THREE from 'three';
-import { get_pose_Error,normalize_Angle, normalize_angle_enhanced,shortest_angle_difference } from '../javascript_files/utils';
-import { support_robot_base_block_height, DH_A, DH_D,  DH_ALPHA } from "../javascript_files/config"
-import { get_Tranpose_of_6x6_Matrix, get_Matrix_multiplication_6x6,get_Matrix_Vector_multiplication_6x1 } from "../javascript_files/matrix_operations";
+import { get_pose_Error, normalize_angle_enhanced,shortest_angle_difference } from '../javascript_files/utils.js';
+import { support_robot_base_block_height, DH_A, DH_D,  DH_ALPHA } from "../javascript_files/config.js"
+import { get_Tranpose_of_6x6_Matrix, get_Matrix_multiplication_6x6,get_Matrix_Vector_multiplication_6x1 } from "../javascript_files/matrix_operations.js";
 import { Matrix,inverse } from 'ml-matrix';
 /**
  * This class represents one robot with its direct and inverse kinematics algorithms and formulas.

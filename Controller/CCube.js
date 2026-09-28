@@ -1,9 +1,7 @@
-import { MCube } from "../Model/MCube";
-import { VCube } from "../View/VCube";
-import { VScene } from "../View/VScene";
-import { VFloor } from "../View/VFloor";
-import { MFloor } from "../Model/MFloor";
-import { Ammo_environment } from "../Model/Ammo_environment";
+import { MCube } from "../Model/MCube.js";
+import { VCube } from "../View/VCube.js";
+import { VScene } from "../View/VScene.js";
+import { Ammo_environment } from "../Model/Ammo_environment.js";
 import * as THREE from 'three';
 /**
  * This class is the controller of a particular Cube object and it is responsible to add the cube-mesh to the scene.
@@ -11,6 +9,7 @@ import * as THREE from 'three';
  * Responsibility: syncronizes the data, transformations and operations between the visual part (mesh) and the physical part of the same cube in the Ammo environment.
  * @see MCube
  * @see VCube
+ * @see VScene
  */
 export class CCube{
     /** @type {int} Identifier of the Cube*/
