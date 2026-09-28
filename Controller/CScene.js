@@ -5,7 +5,7 @@ import { Ammo_environment } from "../Model/Ammo_environment.js";
 import { VScene } from "../View/VScene.js";
 import { normalize_angle_enhanced, shortest_angle_difference } from "../javascript_files/utils.js";
 import { max_iterations,epsilon_position,epislon_orientation } from "../javascript_files/config.js";
-import * as TWEEN from '@tweenjs/tween.js';
+import * as TWEEN from "https://cdn.jsdelivr.net/npm/@tweenjs/tween.js@25.0.0/dist/tween.esm.js";
 import * as THREE from 'three';
 import { CFloor } from "./CFloor.js";
 import { VFloor } from "../View/VFloor.js";
