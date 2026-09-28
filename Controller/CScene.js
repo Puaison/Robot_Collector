@@ -118,15 +118,30 @@ export class CScene {
         //Button for generating new cubes
         const reset_cube_button = {new_cubes: () => {this.reset_cubes();}};
         lil_gui.add(reset_cube_button, "new_cubes").name("Reset cubes");
-
-
     }
 
+    static async getInstance() {
+        if (CScene.#instance === null) {
+            CScene.#instance = new CScene();
+            //Load the robot and the gripper (both Views and Models)
+            await CScene.#instance.#robot.load_CRobot();
+        }
+        return CScene.#instance;
+    }
+
+    /**
+     * Callback function invoked every time the "Reset cubes" button is pressed
+     */
     reset_cubes(){
-        if(!(this.#executing_animation)){
+        // If the robot is executing an animation or has a cube in its gripper, ignore the event of the button
+        if(!(this.#executing_animation) && !(this.#object_collected)){
+            //For every cube on the floor
             for (const ccube of [...CFloor.getInstance().get_CCubes()]) {
+                // Eliminate the mesh from the scene
                 ccube.get_VCube().clear_mesh();
+                // Eliminate the twin physical object in the Ammo Environment
                 ccube.get_MCube().clear_Ammo();
+                //Remove the Cube controller from the array of cubes on the floor
                 CFloor.getInstance().remove_CCube(ccube);
             }
             // First cube
@@ -160,39 +175,30 @@ export class CScene {
                 'XYZ'
             );
             //The first value is the ID of the cube, the last value the color of the mesh in hexadecimal
-            this.create_cube(3,position_third_cube,RPY_third_cube,0x00ff00);
-            
+            this.create_cube(3,position_third_cube,RPY_third_cube,0x00ff00);   
         }
-
     }
-
     
-
+    /**
+     * This method is called every time the value of the animation period is changed.
+     * It re-scales the duration of the remaing part of the tween-animation proportionally to the animation period set
+     */
     change_animation_period() {
         //If no active tween, interrupt the function
         if (this.#current_tween===null)
             return;
 
         //If there is an active tween, compute the new remaining time proportionally to the new animation duration and to the current tween's completion percentage 
-        const elapsed_tween_time = this.#actual_time - this.tween_start_time;
+        const elapsed_tween_time= this.#actual_time-this.tween_start_time;
         //Actual progress of the tween (in percentage) => 0.0 at the beginning, 0.50 robot in the middle, 1.0 at the end.
-        const progress_tween = elapsed_tween_time / this.#current_tween._duration;
+        const progress_tween= elapsed_tween_time/this.#current_tween._duration;
         // Scale the progress time w.r.t. the tween's percentage of completion and the new animation period
-        const new_elapsed_tween_time = progress_tween * this.animation_period;
+        const new_elapsed_tween_time= progress_tween*this.animation_period;
         // Compute the remainining time scaled to the new animation period
-        const remaining_tween_time = this.animation_period - new_elapsed_tween_time;
+        const remaining_tween_time= this.animation_period-new_elapsed_tween_time;
         this.#current_tween.stop();
         this.#current_tween.duration(remaining_tween_time).start(this.#actual_time, true); //restart from the last conf
         this.tween_start_time = this.#actual_time;
-    }
-
-    static async getInstance() {
-        if (CScene.#instance === null) {
-            CScene.#instance = new CScene();
-            //Load the robot and the gripper (both Views and Models)
-            await CScene.#instance.#robot.load_CRobot();
-        }
-        return CScene.#instance;
     }
 
     /**
@@ -253,7 +259,7 @@ export class CScene {
     }
 
     /**
-     * This method manages all the control variables and the internal meshes/bodies when the robot collects a cube.  
+     * This method manages all the control variables and the internal meshes/bodies for the robot use case "Collect cube".  
      */
     collect_cube(){
         this.#object_collected = true;
@@ -269,7 +275,7 @@ export class CScene {
     }
 
     /**
-     * This method manages all the control variables and the internal meshes/bodies when the robot releases a cube.  
+     * This method manages all the control variables and the internal meshes/bodies for the robot use case "Release cube".  
      */
     release_cube(){
         this.#object_collected = false;
@@ -281,63 +287,111 @@ export class CScene {
         VScene.getInstance().get_scene().attach(selected_cube_mesh); // By adding the mesh of the cube to the scene, it will be disconnected by the robot chain
         selected_cube_Ammo.setCollisionFlags(selected_cube_Ammo.getCollisionFlags() & ~2); //Necessary otherwise strange behaviour when releasing
     }
+    
 
+    /**
+     * This method returns a Promise that resolves when the tween finishes interpolating between two robot joints' configurations. 
+     * @param {Array_of_float} q_initial Initial Robot joints' configuration
+     * @param {Array_of_float} q_final Target Robot joints' configuration
+     */
     move_Threejs_Robot(q_initial, q_final) {
         return new Promise((resolve) => {
-            // const q = Array.from(q_initial.map(angle => normalize_angle_enhanced_Tween(angle)));
-            // const target = Array.from(q_final.map(angle => normalize_angle_enhanced_Tween(angle)));
+            //Make a copy of the array as the tween will modify them
             const q_in = Array.from(q_initial);
             const q_fin = Array.from(q_final);
+            //Being angles circular, find the shortest path betwenn q_in and q_fin configurations. Then sum it to q_in to obtain the final target 
             const target = q_in.map((angle, i) => angle + shortest_angle_difference(angle, q_fin[i]));
             this.tween_start_time = this.#actual_time;
-            //this.last_tween_duration = this.animation_period;
-            this.#current_tween = new TWEEN.Tween(q_in, this.#My_TWEEN_Group) //Start from q
-                .to(target, this.animation_period) //It must reach target in these milliseconds
+            this.#current_tween = new TWEEN.Tween(q_in, this.#My_TWEEN_Group) //Start from q_in
+                .to(target, this.animation_period) //It must reach target in this.animation_period milliseconds
                 .easing(TWEEN.Easing.Sinusoidal.InOut) //More sweet animation at the start and at the end
-                .onUpdate(() => { // Function called during the animation
+                // Function called during the interpolation
+                .onUpdate(() => { 
                     const temp_q = [
                         q_in[0],
                         q_in[1],
-                        q_in[2],
+                        q_in[2], //tween will interpolate and save the intermediate results in q_in
                         q_in[3],
                         q_in[4],
                         q_in[5]
                     ];
+
+                    //Normalize the intermediate result of the tween between -PI and PI
                     const current_q = temp_q.map(angle => normalize_angle_enhanced(angle));
+
+                    //Update the internal values of the joints' configuration
                     this.#robot.get_VRobot().set_last_q_configuration(current_q); 
                     this.#robot.get_MRobot().set_last_q_configuration(current_q);
+
+                    //Update, in the Three.js scene, the robot mesh to the intermediate configuration
+                    //This will create the visual robot movement animation following the interpolation of tween
                     this.#robot.get_VRobot().update_Threejs_Robot_Joints(current_q);
+                }) //Lines of code executed at the end of the interpolation-animation
+                .onComplete(() => {
+                    this.#current_tween=null;
+                    //resolve the promise
+                    resolve();
                 })
-                .onComplete(() => {this.#current_tween=null; resolve();}) //Function called at the end of the animation
                 .start(this.#actual_time); //Let start the planned Tween
         });
     }
 
+    /**
+     * This method returns a Promise that resolves when the tween finishes interpolating between two gripper's aperture configurations
+     * or when the gripper's contact sensors identify a collision with a cube in the center of the TCP
+     * @param {float} initial_value of the gripper aperture. 0 correspond to the gripper fully open
+     * @param {float} final_value of the gripper aperture.
+     */
     open_close_Threejs_Gripper(initial_value, final_value) {
         return new Promise((resolve) => {
+            //Make a copy of the initial value and insert it in an array (otherwise tween will not work)
             const current_value = [initial_value];
             this.tween_start_time = this.#actual_time;
-            //this.last_tween_duration = this.animation_period;
             this.#current_tween = new TWEEN.Tween(current_value, this.#My_TWEEN_Group) //Start from current_value
-                .to([final_value], this.animation_period) //It must reach target in these milliseconds
+                .to([final_value], this.animation_period) //It must reach target in this.animation_period milliseconds
                 .easing(TWEEN.Easing.Sinusoidal.InOut) //More sweet animation at the start and at the end
-                .onUpdate(() => { // Function called during the animation
+                // Function called during the interpolation
+                .onUpdate(() => {
+                    //Update the internal values of the gripper aperture
                     this.#robot.get_CGripper().get_VGripper().set_last_gripper_value(current_value[0]);
                     this.#robot.get_CGripper().get_MGripper().set_last_gripper_value(current_value[0]);
+
+                    //Update, in the Three.js scene, the gripper mesh to the intermediate configuration
+                    //This will create the visual gripper open-close animation following the interpolation of tween
                     this.#robot.get_CGripper().get_VGripper().get_gripper_mesh().setJointValue('robotiq_85_left_knuckle_joint', current_value[0]);
+
+                    // If the right contact sensor (with ID 3000 in ammo env) and the left contact sensor (with ID 2000 in ammo env)
+                    // detect a collision with the cube selected by the user in the ammo env (and no object is currently in the gripper),
+                    // the use case of "Collecting cube" is triggered.
                     if (this.detect_collisions_between(this.#selected_cube.get_ID(),3000) && this.detect_collisions_between(this.#selected_cube.get_ID(),2000) && !(this.#object_collected)){
-                        console.log("Object collected");
                         this.#current_tween.stop();
+                        console.log("Object collected");
+                        // This method manages the use case "Collect cube"
                         this.collect_cube();
                         this.#current_tween=null;
+                        //resolve the promise and interrupt the animation anticipately
                         resolve();
                     }
+                    // If the right contact sensor (with ID 3000 in ammo env) and the left contact sensor (with ID 2000 in ammo env)
+                    // are no more detecting a collision with the cube that the robot was previuosly trasnporting,
+                    // the use case of "Release cube" is triggered.
                     if (!(this.detect_collisions_between(this.#selected_cube.get_ID(),3000)) && !(this.detect_collisions_between(this.#selected_cube.get_ID(),2000)) && this.#object_collected){
                         console.log("Object released");
+                        // This method manages the use case "Release cube"
                         this.release_cube();
                     }
                 })
-                .onComplete(() => {this.#selected_cube= null; this.#selected_chest=null; this.#current_tween=null; resolve();}) //Function called at the end of the animation
+                //Lines of code executed at the end of the interpolation-animation
+                .onComplete(() => {
+                    //The tween will call this piece of code only when the robot has released a cube at the end of the use case "Release cube" 
+                    // or when it misses the cube during the "Collect cube" use case 
+                    // In all the other cases it will resolve before executing this below.
+                    this.#selected_cube= null; 
+                    this.#selected_chest=null; 
+                    this.#current_tween=null; 
+                    //resolve the promise
+                    resolve();
+                })
                 .start(this.#actual_time); //Let start the planned Tween
         });
     }
