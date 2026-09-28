@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {support_robot_base_block_height} from '../javascript_files/config.js'
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { OrbitControls } from "https://cdn.jsdelivr.net/npm/three@0.185.1/examples/jsm/controls/OrbitControls.js";
 
 /**
  * This class represents the scene in the Three.js environment with all its components. It uses the Singleton Pattern.
