@@ -86,7 +86,7 @@ export class CScene {
         this.create_cube(2,position_second_cube,RPY_second_cube,0x00fff0);
 
         // Third Cube
-        const position_third_cube = [-0.45,1.5,-0.5];
+        const position_third_cube = [-0.45,1.5,-0.35];
         const RPY_third_cube = new THREE.Euler(
             0,
             0,
@@ -214,7 +214,7 @@ export class CScene {
             this.create_cube(2,position_second_cube,RPY_second_cube,0x00fff0);
 
             // Third Cube
-            const position_third_cube = [-0.45,1.5,-0.5];
+            const position_third_cube = [-0.45,1.5,-0.35];
             const RPY_third_cube = new THREE.Euler(
                 0,
                 0,
