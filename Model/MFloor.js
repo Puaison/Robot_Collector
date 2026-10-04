@@ -14,6 +14,9 @@ export class MFloor{
     /** @type {btRigidBody} This is the rigid body of the floor in the Singleton Ammo physics world, and contains all the physical informations (size,mass,inertia) */
     #floor_Ammo = null;
 
+    /**
+     * Create the floor body in the Ammo env that has the same dimensions of the twin-mesh, and it is a static body that cannot be moved by gravity or collisions 
+     */
     constructor(){
         const ammo_environment = Ammo_environment.getInstance();
         const Ammo = ammo_environment.get_Ammo();
@@ -28,16 +31,15 @@ export class MFloor{
 
         const floor_inertia_Ammo = new Ammo.btVector3(0, 0, 0); // No inertia for the floor
 
-        //floor_Shape_Ammo.calculateLocalInertia(1,floor_inertia_Ammo);
-
         const floor_info = new Ammo.btRigidBodyConstructionInfo( //Gathering Info for constructing the floor
-            0,                  // mass = 0
+            0,                  // mass = 0. so this is a static body that is not influnced by gravity and collisions
             floor_initial_Transform_Ammo, //initial position
             floor_Shape_Ammo, // shape of the object
             floor_inertia_Ammo
         );
 
-        this.#floor_Ammo = new Ammo.btRigidBody(floor_info); //Finally, create the rigid body with the info described above
+        //Finally, create the rigid body with the info described above and add it to the Ammo env
+        this.#floor_Ammo = new Ammo.btRigidBody(floor_info);
         Ammo_environment.getInstance().get_World().addRigidBody(this.#floor_Ammo);
     }
     /**

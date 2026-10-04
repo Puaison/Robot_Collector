@@ -108,16 +108,63 @@ export class CScene {
         // Create the timer
         this.#timer=new THREE.Timer();
 
-        // GUI setup
-        const lil_gui= new GUI();
-        //event for changing the camera FOV
-        lil_gui.add(VScene.getInstance().get_camera(), 'fov', 1, 180).name("Change FOV").onChange(() => this.animate());
+        //#region GUI setup
+        const lil_gui= new GUI({ title: "User Control Panel" });
+        lil_gui.domElement.style.width = "550px";
+        lil_gui.domElement.style.setProperty("--name-width", "5%");
+
+
+
+        //#region Use cases Instruction panel
+        const instruction_panel = lil_gui.addFolder("How to use");
+        instruction_panel.domElement.style.fontSize = "16px";
+        instruction_panel.add({ text: "Click a cube (yellow, cyan or green)." }, "text").name("1. Select Cube");
+        instruction_panel.add({ text: "The robot will collect the cube" }, "text").name("2. Collect Animation");
+        instruction_panel.add({ text: "Click a chest" }, "text").name("3. Select Chest");
+        instruction_panel.add({ text: "The robot will release the cube in the selected chest" }, "text").name("4. Release Animation");
+        // Increase font size of the text inputs
+        instruction_panel.domElement
+            .querySelectorAll("input")
+            .forEach(input => {input.style.fontSize = "16px";});
+
+        instruction_panel.domElement.style.setProperty("--name-width", "30%");
+        //#endregion
+
+
+
+        //#region Controls Instruction Panel
+        const control_panel= lil_gui.addFolder("Controls");
+        control_panel.domElement.style.fontSize = "16px";
+
         //event for changing the duration of the animations
-        lil_gui.add(this, 'animation_period', 750, 5000).name("Change animation period").onChange(() => this.change_animation_period());
+        control_panel.add(this, 'animation_period', 750, 5000).name("Change animation period").onChange(() => this.change_animation_period());
+
+        //Text describing what are the controls
+        control_panel.add({ text: "Hold the left mouse button and move the mouse" }, "text").name("Rotate Camera");
+        control_panel.add({ text: "Hold the right mouse button and move the mouse" }, "text").name("Move Camera");
+        control_panel.add({ text: "Scroll the mouse wheel" }, "text").name("Zoom in/out");
+        control_panel.add({ text: "Left-click an object" }, "text").name("Interact with objects");
         
         //Button for generating new cubes
         const reset_cube_button = {new_cubes: () => {this.reset_cubes();}};
-        lil_gui.add(reset_cube_button, "new_cubes").name("Reset cubes");
+        control_panel.add(reset_cube_button, "new_cubes").name("Reset cubes [Make new cubes on the floor]");
+
+        control_panel.domElement
+            .querySelectorAll("input")
+            .forEach(input => {input.style.fontSize = "16px";});
+
+        control_panel.domElement.style.setProperty("--name-width", "34%");
+        //#endregion
+        
+
+        lil_gui.domElement
+            .querySelectorAll("button")
+            .forEach(button => {button.style.fontSize = "16px";});
+        // The titles of the panels are red
+        lil_gui.domElement
+            .querySelectorAll(".lil-title")
+            .forEach(title => {title.style.color = "red";});
+        //#endregion
     }
 
     static async getInstance() {
@@ -551,9 +598,9 @@ export class CScene {
             this.#robot.get_CGripper().syncronize_finger_mesh_to_Ammo();
         }
         this.#timer.update();
-        const elapsed_Time = this.#timer.getDelta();
+        const elapsed_time = this.#timer.getDelta();
         // Step the physical simulation of the Ammo env
-        Ammo_environment.getInstance().get_World().stepSimulation(elapsed_Time,10);
+        Ammo_environment.getInstance().get_World().stepSimulation(elapsed_time  ,10);
         //#region Take the pose computed by the Ammo env for each cube on the floor and in the chests and syncronize the corresponding mesh.
         CFloor.getInstance().syncronize_Ammo_to_mesh();
         for (const CChest of this.#cchests_array) {

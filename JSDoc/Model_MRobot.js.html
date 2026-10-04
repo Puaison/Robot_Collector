@@ -27,9 +27,9 @@
     <section>
         <article>
             <pre class="prettyprint source linenums"><code>import * as THREE from 'three';
-import { get_pose_Error,normalize_Angle } from '../javascript_files/utils';
-import { block_Height, DH_A, DH_D,  DH_ALPHA } from "../javascript_files/config"
-import { get_Tranpose_of_6x6_Matrix, get_Matrix_multiplication_6x6,get_Matrix_Vector_multiplication_6x1 } from "../javascript_files/matrix_operations";
+import { get_pose_Error, normalize_angle_enhanced,shortest_angle_difference } from '../javascript_files/utils.js';
+import { support_robot_base_block_height, DH_A, DH_D,  DH_ALPHA } from "../javascript_files/config.js"
+import { get_Tranpose_of_6x6_Matrix, get_Matrix_multiplication_6x6,get_Matrix_Vector_multiplication_6x1 } from "../javascript_files/matrix_operations.js";
 import { Matrix,inverse } from 'ml-matrix';
 /**
  * This class represents one robot with its direct and inverse kinematics algorithms and formulas.
@@ -39,7 +39,7 @@ import { Matrix,inverse } from 'ml-matrix';
  * @see MGripper
  */
 export class MRobot{
-    /** @type {THREE.Matrix4} This is the initial homogeneous transformation caused by different conventions of the base frame, by the offset w.r.t the floor and by the rotation compensation for placing the base of the robot parallel to the floor  */
+    /** @type {THREE.Matrix4} This is the initial homogeneous transformation caused by different conventions of the base frame, by the vertical_offset w.r.t the floor and by the rotation compensation for placing the base of the robot parallel to the floor  */
     #base_transformations=null;
     /** @type {MGripper} Gripper mounted on the tool space of the robot  */
     #mgripper=null;
@@ -47,15 +47,17 @@ export class MRobot{
     #last_q_configuration = null;
     /**
      * Create the fixed base transformation
-     * @param {float} offset distance from the floor
+     * @param {float} vertical_offset distance from the floor
      */
-    constructor(offset=block_Height){
-        // Place the robot above the box
-        const T_y = new THREE.Matrix4().makeTranslation(0, offset, 0);
+    constructor(vertical_offset=support_robot_base_block_height){
+        // Place the robot upon the support robot base block
+        const T_y = new THREE.Matrix4().makeTranslation(0, vertical_offset, 0);
         
-        // The URDF follows REP-103 conventions. Thus, we need to apply a rotation correction to the last joint orientation obtained by forward kinematics based on the original DH conventions
+        // In the URDF file of the UR5 mesh, the base_link_inertia has a rotation around z-axis, w.r.t the world frame, of Math.PI. 
+        // Thus, it is necessary to add an homogeneous transformation that makes the internal kinematic model (computed with DH matrices) align. 
         const T_z = new THREE.Matrix4().makeRotationZ(Math.PI);
     
+        // From Z-up coordinate system of DH parameters to Y-up coordinate system of Three.js
         // Three.js mesh rotation around x-axis in order to have the robot standing on the floor
         const T_x = new THREE.Matrix4().makeRotationX(-Math.PI/2);
 
@@ -95,7 +97,11 @@ export class MRobot{
              0,             0,         0,          1
         );
     }
-
+    /**
+     * Method that returns the homogeneous coordinates of the gripper (referred to as T) w.r.t the Three.js world frame, given the joints' configuration q.
+     * @param {Array_of_float} q joints' configuration of the robot
+     * @returns Matrix 4x4 (referred to as T) representing the homogeneous coordinates of the gripper w.r.t the Three.js world frame, given the joints' configuration q.
+     */
     get_homogeneous_coordinates(q){
         // Create the six DH matrices for each joint
         const T01 = this.get_DH_Matrix(
@@ -142,6 +148,7 @@ export class MRobot{
         
         let T6G = null;
 
+        // if the gripper is mounted on the robot, take its transformation
         if(this.#mgripper === null) { 
             T6G = new THREE.Matrix4();
         }
@@ -162,9 +169,16 @@ export class MRobot{
             .multiply(T6G);
         return T0G;
     }
+
+    /**
+     * Method that calculates the numerical Jacobian of the robot at a given joints' configuration q
+     * @param {Array_of_float} q joints' configuration of the robot
+     * @param {float} epsilon small perturbation for numerical differentiation
+     * @returns Matrix 6x6 representing the numerical Jacobian of the robot at the given joints' configuration
+     */
     calculate_numerical_Jacobian(q, epsilon = 1e-4) {
-        //const T_normal = extract_T_from_q(q);
-    
+        
+        // Calculate the homogeneous coordinates matrices T after perturbating, given the joints' configuration q, each joint by epsilon and -epsilon
         const T_plus_0 = this.get_homogeneous_coordinates(q.map((x, i) => i === 0 ? x + epsilon : x));
         const T_plus_1 = this.get_homogeneous_coordinates(q.map((x, i) => i === 1 ? x + epsilon : x));
         const T_plus_2 = this.get_homogeneous_coordinates(q.map((x, i) => i === 2 ? x + epsilon : x));
@@ -179,8 +193,7 @@ export class MRobot{
         const T_minus_4 = this.get_homogeneous_coordinates(q.map((x, i) => i === 4 ? x - epsilon : x));
         const T_minus_5 = this.get_homogeneous_coordinates(q.map((x, i) => i === 5 ? x - epsilon : x));
     
-        //const pose_normal = extract_pose_from_T(T_normal);
-    
+        // Extract the pose (position and orientation) from each homogeneous coordinates matrix T
         const pose_plus_0 = this.extract_pose_from_T(T_plus_0);
         const pose_plus_1 = this.extract_pose_from_T(T_plus_1);
         const pose_plus_2 = this.extract_pose_from_T(T_plus_2);
@@ -194,14 +207,15 @@ export class MRobot{
         const pose_minus_3 = this.extract_pose_from_T(T_minus_3);
         const pose_minus_4 = this.extract_pose_from_T(T_minus_4);
         const pose_minus_5 = this.extract_pose_from_T(T_minus_5);
-    
+
+        // Calculate the numerical Jacobian matrix using the finite difference method
         let J = [
             [                pose_plus_0[0] - pose_minus_0[0],                 pose_plus_1[0] - pose_minus_1[0],                 pose_plus_2[0] - pose_minus_2[0],                 pose_plus_3[0] - pose_minus_3[0],                 pose_plus_4[0] - pose_minus_4[0],                 pose_plus_5[0] - pose_minus_5[0]],
             [                pose_plus_0[1] - pose_minus_0[1],                 pose_plus_1[1] - pose_minus_1[1],                 pose_plus_2[1] - pose_minus_2[1],                 pose_plus_3[1] - pose_minus_3[1],                 pose_plus_4[1] - pose_minus_4[1],                 pose_plus_5[1] - pose_minus_5[1]],
             [                pose_plus_0[2] - pose_minus_0[2],                 pose_plus_1[2] - pose_minus_1[2],                 pose_plus_2[2] - pose_minus_2[2],                 pose_plus_3[2] - pose_minus_3[2],                 pose_plus_4[2] - pose_minus_4[2],                 pose_plus_5[2] - pose_minus_5[2]],
-            [normalize_Angle(pose_plus_0[3] - pose_minus_0[3]), normalize_Angle(pose_plus_1[3] - pose_minus_1[3]), normalize_Angle(pose_plus_2[3] - pose_minus_2[3]), normalize_Angle(pose_plus_3[3] - pose_minus_3[3]), normalize_Angle(pose_plus_4[3] - pose_minus_4[3]), normalize_Angle(pose_plus_5[3] - pose_minus_5[3])],
-            [normalize_Angle(pose_plus_0[4] - pose_minus_0[4]), normalize_Angle(pose_plus_1[4] - pose_minus_1[4]), normalize_Angle(pose_plus_2[4] - pose_minus_2[4]), normalize_Angle(pose_plus_3[4] - pose_minus_3[4]), normalize_Angle(pose_plus_4[4] - pose_minus_4[4]), normalize_Angle(pose_plus_5[4] - pose_minus_5[4])],
-            [normalize_Angle(pose_plus_0[5] - pose_minus_0[5]), normalize_Angle(pose_plus_1[5] - pose_minus_1[5]), normalize_Angle(pose_plus_2[5] - pose_minus_2[5]), normalize_Angle(pose_plus_3[5] - pose_minus_3[5]), normalize_Angle(pose_plus_4[5] - pose_minus_4[5]), normalize_Angle(pose_plus_5[5] - pose_minus_5[5])]
+            [shortest_angle_difference(pose_minus_0[3],pose_plus_0[3]), shortest_angle_difference(pose_minus_1[3],pose_plus_1[3]), shortest_angle_difference(pose_minus_2[3],pose_plus_2[3] ), shortest_angle_difference(pose_minus_3[3],pose_plus_3[3] ), shortest_angle_difference(pose_minus_4[3],pose_plus_4[3]), shortest_angle_difference(pose_minus_5[3],pose_plus_5[3])],
+            [shortest_angle_difference(pose_minus_0[4],pose_plus_0[4]), shortest_angle_difference(pose_minus_1[4],pose_plus_1[4] ), shortest_angle_difference(pose_minus_2[4],pose_plus_2[4]), shortest_angle_difference(pose_minus_3[4],pose_plus_3[4]), shortest_angle_difference(pose_minus_4[4],pose_plus_4[4]), shortest_angle_difference(pose_minus_5[4],pose_plus_5[4])],
+            [shortest_angle_difference(pose_minus_0[5],pose_plus_0[5]), shortest_angle_difference(pose_minus_1[5],pose_plus_1[5]), shortest_angle_difference(pose_minus_2[5],pose_plus_2[5]), shortest_angle_difference(pose_minus_3[5],pose_plus_3[5]), shortest_angle_difference(pose_minus_4[5],pose_plus_4[5]), shortest_angle_difference(pose_minus_5[5],pose_plus_5[5])]
         ];
         J = J.map(row => row.map(x => x * (1/(2*epsilon))));
         return J;
@@ -217,8 +231,8 @@ export class MRobot{
     extract_RPY_from_T(T){
         const R = new THREE.Matrix4().extractRotation(T);
         const RPY = new THREE.Euler();
-        RPY.setFromRotationMatrix(R, 'ZYX');
-        //RPY.setFromRotationMatrix(R, 'XYZ');
+        //RPY.setFromRotationMatrix(R, 'ZYX');
+        RPY.setFromRotationMatrix(R, 'XYZ');
         const roll  = RPY.x;
         const pitch = RPY.y;
         const yaw   = RPY.z;
@@ -237,49 +251,78 @@ export class MRobot{
             RPY.yaw
         ];
     }
-    dumped_Least_Square(q,error_vector, lambda =0.05){
+
+    /**
+     * Method that implements the dumped least square method.
+     * It calculates the updates in joint angles (dq) needed to reduce the error between the intermediate pose and the target pose.
+     * @param {Array_of_float} q intermediate joints' configuration of the robot 
+     * @param {Array_of_float} error_vector error between the intermediate pose and the target pose
+     * @param {float} lambda the weight of the dumping factor to avoid singularities
+     * @returns The updates in joint angles (dq)
+     */
+    dumped_least_square(q,error_vector, lambda =0.05){
         const J = this.calculate_numerical_Jacobian(q);
         const JT= get_Tranpose_of_6x6_Matrix(J);
+        //Matrix multiplication of the jacobian and its transpose
         const JJT= get_Matrix_multiplication_6x6(J,JT);
-        //const I= get_Identity_Matrix_6x6();
+
+        // Add the dumping factor to the diagonal elements of JJT
         for (let i = 0; i &lt; 6; i++) {
             JJT[i][i] += lambda * lambda;
         }
     
-        //const Inv = get_inverse_Matrix(JJT);
+        // Get the inverse of the previous matrix
         const JJT_Matrix = new Matrix(JJT);
         const JJT_Matrix_inverse = inverse(JJT_Matrix);
         const Inv = JJT_Matrix_inverse.to2DArray();
     
+        // Multiply the previous inverse matrix with the error vector
         const temp= get_Matrix_Vector_multiplication_6x1(Inv,error_vector);
+        // Finally multiply the transpose of the Jacobian with the previous result to get the updates in joint angles (dq)
         const result = get_Matrix_Vector_multiplication_6x1(JT,temp);
         return result;
     }
-
-    inverse_Kinematics(target_pose,initial_q, max_Iterations =100,position_tolerance=1e-4,orientation_tolerance=1e-4, lambda = 0.05){
-        //const target_pose = extract_pose_from_T(target_T);
-        let actual_q= [...initial_q];
-        //let actual_q= initial_q;
-        for(let it = 0; it &lt; max_Iterations; it++){
+    /**
+     * Method that implements the numerical iterative inverse kinematics algorithm (through dumped least square method) 
+     * to find the joints' configuration of the robot that achieve a target pose.
+     * @param {Array_of_float} target_pose 
+     * @param {Array_of_float} initial_q 
+     * @param {int} max_iterations 
+     * @param {float} position_tolerance convergence error threshold for the position
+     * @param {float} orientation_tolerance convergence error threshold for the orientation
+     * @param {float} lambda the weight of the dumping factor to avoid singularities
+     * @returns The joints' configuration of the robot that achieve the target pose
+     */
+    inverse_Kinematics(target_pose,initial_q, max_iterations =100,position_tolerance=1e-4,orientation_tolerance=1e-4, lambda = 0.05){
+        let actual_q = Array.from(initial_q);
+        for(let it = 0; it &lt; max_iterations; it++){
+            // Intermedtiate homogeneous coordinates
             const actual_T= this.get_homogeneous_coordinates(actual_q);
+
+            // Intermediate pose of the gripper
             const actual_pose= this.extract_pose_from_T(actual_T);
+
+            // Calculate the error between the target pose and the intermediate pose
             const pose_error = get_pose_Error(target_pose,actual_pose);
     
             const position_error = Math.sqrt(pose_error[0] ** 2 + pose_error[1] ** 2 + pose_error[2] ** 2);
     
             const orientation_error = Math.sqrt(pose_error[3] ** 2 + pose_error[4] ** 2 + pose_error[5] ** 2);
-    
+            // The method onverged if the found joints' configuration achieves an intermediate pose that is close enough the target pose
             if (position_error &lt; position_tolerance &amp;&amp; orientation_error &lt; orientation_tolerance) {
                 console.log("Inverse Kinematics converged in",it,"iterations");
     
                 return actual_q;
             }
-    
-            const dq = this.dumped_Least_Square(actual_q,pose_error,lambda);
+            // Calculate the updates in joint angles (dq) using the dumped least square method
+            const dq = this.dumped_least_square(actual_q,pose_error,lambda);
             for (let i = 0; i &lt; 6; i++) {
                 actual_q[i] += dq[i];
             }
+            // Normalize the joint angles to be in the interval of -PI and +PI
+            actual_q=actual_q.map(angle => normalize_angle_enhanced(angle));
         }
+        //When the inverse kinematics algorithm did not converge, return the most the closet joints' configuration computed for reaching the target pose
         console.warn("Inverse Kinematics did not converge");
     
         return actual_q;
@@ -301,7 +344,7 @@ export class MRobot{
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Wed Sep 23 2026 20:02:52 GMT+0200 (Ora legale dell’Europa centrale)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Sun Oct 04 2026 16:34:17 GMT+0200 (Ora legale dell’Europa centrale)
 </footer>
 
 <script> prettyPrint(); </script>

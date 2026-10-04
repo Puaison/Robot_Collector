@@ -37,18 +37,21 @@ export class MCube {
         const collectable_object_inertia_Ammo=new Ammo.btVector3(0, 0, 0);
         collectable_object_shape_Ammo.calculateLocalInertia(1,collectable_object_inertia_Ammo);
         const info_rigid_body_Ammo = new Ammo.btRigidBodyConstructionInfo(
-            1, //mass
+            1, //mass given to the cube
             initial_state_Ammo,
             collectable_object_shape_Ammo,
             collectable_object_inertia_Ammo
         );
         this.#body_Ammo = new Ammo.btRigidBody(info_rigid_body_Ammo);
-        //Not letting slip the box on the other boxes but it continue
-        this.#body_Ammo.setFriction(5.72);//0.72
+        //Give some friction to the cube in order to not slip on the other cubes
+        this.#body_Ammo.setFriction(5.72);
         this.#body_Ammo.setRollingFriction(5.72);
         this.#body_Ammo.setRestitution(0.0);
+        //set index
         this.#body_Ammo.setUserIndex(id);
-        this.#body_Ammo.setActivationState(4); //otherwise after sometime Ammo will deactivate it
+        
+        //With this instruction, we impose the Ammo env to never deactivate the cube (and the corresponding collisions calculations)
+        this.#body_Ammo.setActivationState(4);
         Ammo_environment.getInstance().get_World().addRigidBody(this.#body_Ammo);
     }
 
@@ -70,7 +73,12 @@ export class MCube {
         motion_state.getWorldTransform(Ammo_transformation);
         return Ammo_transformation.getRotation();
     }
-
+    /**
+     * Given the pose of the cube in the Three.js environment, 
+     * update the pose of the cube and of the relative bounding box in the Ammo env
+     * @param {THREE.Vector3} position 
+     * @param {THREE.Quaternion} orientation quaternion 
+     */
     set_pose(position,orientation){
         const ammo_environment = Ammo_environment.getInstance();
         const Ammo = ammo_environment.get_Ammo();

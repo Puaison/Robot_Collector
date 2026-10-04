@@ -28,7 +28,7 @@
 
 <header>
     
-        <h2><span class="attribs"><span class="type-signature"></span></span>VChest<span class="signature">()</span><span class="type-signature"></span></h2>
+        <h2><span class="attribs"><span class="type-signature"></span></span>VChest<span class="signature">(id, width_of_the_chest, depth_of_the_chest, height_of_the_chest, thickness_of_panels)</span><span class="type-signature"></span></h2>
         
             <div class="class-description">This class represents the mesh chest in the Three.js environment that is a Three.js group which gathers. 
 
@@ -47,19 +47,196 @@ Responsibility: It models the group mesh of a specific chest; It also remebers w
     
 
     
-    <h4 class="name" id="VChest"><span class="type-signature"></span>new VChest<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="VChest"><span class="type-signature"></span>new VChest<span class="signature">(id, width_of_the_chest, depth_of_the_chest, height_of_the_chest, thickness_of_panels)</span><span class="type-signature"></span></h4>
     
 
     
 
 
 
+<div class="description">
+    Create the five panels meshes that together compose the final mesh of the Chest
+</div>
 
 
 
 
 
 
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>id</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">int</span>
+
+
+            
+            </td>
+
+            
+
+            
+                <td class="default">
+                
+                    1
+                
+                </td>
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>width_of_the_chest</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">float</span>
+
+
+            
+            </td>
+
+            
+
+            
+                <td class="default">
+                
+                    0.3
+                
+                </td>
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>depth_of_the_chest</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">float</span>
+
+
+            
+            </td>
+
+            
+
+            
+                <td class="default">
+                
+                    0.3
+                
+                </td>
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>height_of_the_chest</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">float</span>
+
+
+            
+            </td>
+
+            
+
+            
+                <td class="default">
+                
+                    0.2
+                
+                </td>
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>thickness_of_panels</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">float</span>
+
+
+            
+            </td>
+
+            
+
+            
+                <td class="default">
+                
+                    0.005
+                
+                </td>
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
 
 
 
@@ -213,7 +390,7 @@ Responsibility: It models the group mesh of a specific chest; It also remebers w
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="View_VChest.js.html">View/VChest.js</a>, <a href="View_VChest.js.html#line15">line 15</a>
+        <a href="View_VChest.js.html">View/VChest.js</a>, <a href="View_VChest.js.html#line16">line 16</a>
     </li></ul></dd>
     
 
@@ -285,7 +462,7 @@ Responsibility: It models the group mesh of a specific chest; It also remebers w
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="View_VChest.js.html">View/VChest.js</a>, <a href="View_VChest.js.html#line17">line 17</a>
+        <a href="View_VChest.js.html">View/VChest.js</a>, <a href="View_VChest.js.html#line18">line 18</a>
     </li></ul></dd>
     
 
@@ -325,7 +502,7 @@ Responsibility: It models the group mesh of a specific chest; It also remebers w
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Wed Sep 23 2026 20:02:52 GMT+0200 (Ora legale dell’Europa centrale)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Sun Oct 04 2026 16:34:17 GMT+0200 (Ora legale dell’Europa centrale)
 </footer>
 
 <script> prettyPrint(); </script>

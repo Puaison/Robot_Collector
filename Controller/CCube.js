@@ -21,29 +21,32 @@ export class CCube{
 
     constructor(id=1, dim=0.047, position=[0.5,0.03,0.5],quaternion=[-0.5,-0.5,-0.5,0.5],color =0xffff44){
         this.#ID =id;
+        // Create the visual representation of the cube (the mesh) and add it to the scene
         this.#vcube= new VCube(id,dim,position,quaternion,color);
         VScene.getInstance().add_mesh(this.#vcube.get_Cube_mesh());
-        //VFloor.getInstance().add_VCube(this.#vcube);
 
+        // Create the physical representation of the cube (the rigid body)
         this.#mcube= new MCube(id,dim,position,quaternion);
-        //MFloor.getInstance().add_MCube(this.#mcube);
     }
     /**
-     * Takes the info from the rigid body of the cube in the Ammo env and copies them to the mesh in the scene.
+     * Takes the info from the rigid body of the cube in the Ammo env. and copies them to the mesh in the scene.
      * Used when the cube is not grasped by the robot (cube dynamic)
      */
     syncronize_Ammo_to_mesh(){
+        // if the cube's mesh and rigid body are already initialized:
         if (this.#vcube.get_Cube_mesh() && this.#mcube.get_Cube_Ammo()){
             const ammo_environment = Ammo_environment.getInstance();
             const Ammo = ammo_environment.get_Ammo();
 
+            // Recover the pose of the cube from the Ammo env.
             const motion_state = this.#mcube.get_Cube_Ammo().getMotionState();
             const Ammo_transformation = new Ammo.btTransform();
             motion_state.getWorldTransform(Ammo_transformation);
     
             const position = Ammo_transformation.getOrigin();
             const orientation = Ammo_transformation.getRotation();
-    
+            
+            // Propagate the recovered pose to the visual representation of the cube in the Three.js scene
             this.#vcube.get_Cube_mesh().position.set(position.x(),position.y(),position.z());
             this.#vcube.get_Cube_mesh().quaternion.set(orientation.x(), orientation.y(), orientation.z(), orientation.w());
     
@@ -54,31 +57,31 @@ export class CCube{
     }
 
     /**
-     * Takes the info from the mesh of the cube and copies them to the rigid body in the Ammo env 
-     * Used when the robot has grasped the cube (cube only kinetic)
+     * Takes the info from the mesh of the cube and copies them to the rigid body in the Ammo env. 
+     * Used when the robot has grasped the cube (cube only kinematic)
      */
     syncronize_mesh_to_Ammo(){
+        // if the cube's mesh and rigid body are already initialized:
         if (this.#vcube.get_Cube_mesh() && this.#mcube.get_Cube_Ammo()){
             const ammo_environment = Ammo_environment.getInstance();
             const Ammo = ammo_environment.get_Ammo();
             const position = new THREE.Vector3();
             const orientation = new THREE.Quaternion();
+            // Recover the pose of the cube from the Three.js scene
             this.#vcube.get_Cube_mesh().getWorldPosition(position);
             this.#vcube.get_Cube_mesh().getWorldQuaternion(orientation);
     
             const Ammo_transformation = new Ammo.btTransform();
             Ammo_transformation.setIdentity();
-    
             const Ammo_position = Ammo_transformation.getOrigin();
+
+            // Propagate the recovered pose to the physical representation of the cube in the Ammo env.
             Ammo_position.setValue(position.x,position.y,position.z);
-    
             Ammo_transformation.setRotation(new Ammo.btQuaternion(orientation.x,orientation.y,orientation.z,orientation.w));
             this.#mcube.get_Cube_Ammo().setWorldTransform(Ammo_transformation);
-            const motion_state = this.#mcube.get_Cube_Ammo().getMotionState();
-    
-            
+            const motion_state = this.#mcube.get_Cube_Ammo().getMotionState();        
             motion_state.setWorldTransform(Ammo_transformation);
-            // Update also the Axis aligned bounding box of the cube for correctly compute collisions
+            // Update also the Axis aligned bounding box of the cube rigid body for correctly compute collisions
             Ammo_environment.getInstance().get_World().updateSingleAabb(this.#mcube.get_Cube_Ammo());
     
         }

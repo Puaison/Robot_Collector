@@ -1,21 +1,19 @@
-export function normalize_Angle(angle) {
 
-    while (angle>Math.PI) {
-        angle -= 2 * Math.PI;
-    }
-
-    while (angle<-Math.PI) {
-        angle += 2 * Math.PI;
-    }
-
-    return angle;
-    //return ((angle + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI;
-}
-
+/**
+ * Function used to normalize an angle to be in the interval of -PI and +PI
+ * @param {float} angle 
+ * @returns Normalized angle between -PI and +PI
+ */
 export function normalize_angle_enhanced(angle){
     return ((angle + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI;
 }
 
+/**
+ * Function used to compute the shortest distance between two angles, taking into account the circular nature of angles.
+ * @param {float} from 
+ * @param {float} to 
+ * @returns The shortest distance between two angles
+ */
 export function shortest_angle_difference(from, to) {
     return Math.atan2(Math.sin(to - from),Math.cos(to - from));
 }

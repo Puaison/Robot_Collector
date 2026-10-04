@@ -28,7 +28,7 @@
 
 <header>
     
-        <h2><span class="attribs"><span class="type-signature"></span></span>MRobot<span class="signature">(offset)</span><span class="type-signature"></span></h2>
+        <h2><span class="attribs"><span class="type-signature"></span></span>MRobot<span class="signature">(vertical_offset)</span><span class="type-signature"></span></h2>
         
             <div class="class-description">This class represents one robot with its direct and inverse kinematics algorithms and formulas.
 
@@ -47,7 +47,7 @@ Responsibility: It calculate the pose of the robot given the joints configuratio
     
 
     
-    <h4 class="name" id="MRobot"><span class="type-signature"></span>new MRobot<span class="signature">(offset)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="MRobot"><span class="type-signature"></span>new MRobot<span class="signature">(vertical_offset)</span><span class="type-signature"></span></h4>
     
 
     
@@ -91,7 +91,7 @@ Responsibility: It calculate the pose of the robot given the joints configuratio
 
         <tr>
             
-                <td class="name"><code>offset</code></td>
+                <td class="name"><code>vertical_offset</code></td>
             
 
             <td class="type">
@@ -218,7 +218,7 @@ Responsibility: It calculate the pose of the robot given the joints configuratio
 
 
 <div class="description">
-    This is the initial homogeneous transformation caused by different conventions of the base frame, by the offset w.r.t the floor and by the rotation compensation for placing the base of the robot parallel to the floor
+    This is the initial homogeneous transformation caused by different conventions of the base frame, by the vertical_offset w.r.t the floor and by the rotation compensation for placing the base of the robot parallel to the floor
 </div>
 
 
@@ -430,6 +430,846 @@ Responsibility: It calculate the pose of the robot given the joints configuratio
     
 
     
+        <h3 class="subsection-title">Methods</h3>
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="calculate_numerical_Jacobian"><span class="type-signature"></span>calculate_numerical_Jacobian<span class="signature">(q, epsilon)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Method that calculates the numerical Jacobian of the robot at a given joints' configuration q
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>q</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array_of_float</span>
+
+
+            
+            </td>
+
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">joints' configuration of the robot</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>epsilon</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">float</span>
+
+
+            
+            </td>
+
+            
+
+            
+                <td class="default">
+                
+                    0.0001
+                
+                </td>
+            
+
+            <td class="description last">small perturbation for numerical differentiation</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Model_MRobot.js.html">Model/MRobot.js</a>, <a href="Model_MRobot.js.html#line151">line 151</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    Matrix 6x6 representing the numerical Jacobian of the robot at the given joints' configuration
+</div>
+
+
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="dumped_least_square"><span class="type-signature"></span>dumped_least_square<span class="signature">(q, error_vector, lambda)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Method that implements the dumped least square method.
+It calculates the updates in joint angles (dq) needed to reduce the error between the intermediate pose and the target pose.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>q</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array_of_float</span>
+
+
+            
+            </td>
+
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">intermediate joints' configuration of the robot</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>error_vector</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array_of_float</span>
+
+
+            
+            </td>
+
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">error between the intermediate pose and the target pose</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>lambda</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">float</span>
+
+
+            
+            </td>
+
+            
+
+            
+                <td class="default">
+                
+                    0.05
+                
+                </td>
+            
+
+            <td class="description last">the weight of the dumping factor to avoid singularities</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Model_MRobot.js.html">Model/MRobot.js</a>, <a href="Model_MRobot.js.html#line235">line 235</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    The updates in joint angles (dq)
+</div>
+
+
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="get_homogeneous_coordinates"><span class="type-signature"></span>get_homogeneous_coordinates<span class="signature">(q)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Method that returns the homogeneous coordinates of the gripper (referred to as T) w.r.t the Three.js world frame, given the joints' configuration q.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>q</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array_of_float</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">joints' configuration of the robot</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Model_MRobot.js.html">Model/MRobot.js</a>, <a href="Model_MRobot.js.html#line77">line 77</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    Matrix 4x4 (referred to as T) representing the homogeneous coordinates of the gripper w.r.t the Three.js world frame, given the joints' configuration q.
+</div>
+
+
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="inverse_Kinematics"><span class="type-signature"></span>inverse_Kinematics<span class="signature">(target_pose, initial_q, max_iterations, position_tolerance, orientation_tolerance, lambda)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Method that implements the numerical iterative inverse kinematics algorithm (through dumped least square method) 
+to find the joints' configuration of the robot that achieve a target pose.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>target_pose</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array_of_float</span>
+
+
+            
+            </td>
+
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>initial_q</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array_of_float</span>
+
+
+            
+            </td>
+
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>max_iterations</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">int</span>
+
+
+            
+            </td>
+
+            
+
+            
+                <td class="default">
+                
+                    100
+                
+                </td>
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>position_tolerance</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">float</span>
+
+
+            
+            </td>
+
+            
+
+            
+                <td class="default">
+                
+                    0.0001
+                
+                </td>
+            
+
+            <td class="description last">convergence error threshold for the position</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>orientation_tolerance</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">float</span>
+
+
+            
+            </td>
+
+            
+
+            
+                <td class="default">
+                
+                    0.0001
+                
+                </td>
+            
+
+            <td class="description last">convergence error threshold for the orientation</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>lambda</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">float</span>
+
+
+            
+            </td>
+
+            
+
+            
+                <td class="default">
+                
+                    0.05
+                
+                </td>
+            
+
+            <td class="description last">the weight of the dumping factor to avoid singularities</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Model_MRobot.js.html">Model/MRobot.js</a>, <a href="Model_MRobot.js.html#line268">line 268</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    The joints' configuration of the robot that achieve the target pose
+</div>
+
+
+
+    
+
+
+
+
+
+        
+    
 
     
 
@@ -450,7 +1290,7 @@ Responsibility: It calculate the pose of the robot given the joints configuratio
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Wed Sep 23 2026 20:02:52 GMT+0200 (Ora legale dell’Europa centrale)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Sun Oct 04 2026 16:34:17 GMT+0200 (Ora legale dell’Europa centrale)
 </footer>
 
 <script> prettyPrint(); </script>

@@ -20,6 +20,7 @@ export class VRobot {
     constructor(vertical_offset = support_robot_base_block_height) {
         const manager = new LoadingManager();
         this.#loader = new URDFLoader(manager);
+        //where the loader can find the meshes folder
         this.#loader.packages = {
             ur_description: './public/ur5/',
             robotiq_85_description: './public/ur5/'
@@ -43,10 +44,11 @@ export class VRobot {
                 robot => {
                     this.#ur5robot = robot;
                     this.update_Threejs_Robot_Joints(this.#last_q_configuration);
-    
+                    
+                    // From Z-up coordinate system of DH parameters to Y-up coordinate system of Three.js
                     // Rotatation of the mesh in order to stand on the floor
                     robot.rotation.x = -Math.PI/2;
-                    // Robot in the center of the scene above the box
+                    // Robot in the center of the scene above the support robot base box
                     robot.position.set(0, this.#vertical_offset, 0);
                     resolve();
                 },

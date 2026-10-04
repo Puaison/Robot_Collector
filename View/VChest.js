@@ -16,7 +16,14 @@ export class VChest{
     #body_mesh = null;
     /** @type {Array_of_VCube} Cubes in the chest */
     #vcubes = [];
-
+    /**
+     * Create the five panels meshes that together compose the final mesh of the Chest
+     * @param {int} id 
+     * @param {float} width_of_the_chest 
+     * @param {float} depth_of_the_chest 
+     * @param {float} height_of_the_chest 
+     * @param {float} thickness_of_panels 
+     */
     constructor(id=1,width_of_the_chest= 0.3,depth_of_the_chest= 0.3,height_of_the_chest= 0.2,thickness_of_panels= 0.005){
         this.#ID=id;
         this.#body_mesh = new THREE.Group();
